@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marroking Shop</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #f4f6f9;
+        }
+
+/* LOGIN SCREEN – WHITE MARBLE EXECUTIVE */
+
+.login-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+
+    /* Fondo blanco mármol elegante */
+    background: linear-gradient(135deg, #ffffff, #f8f8f6, #f2efe9);
+}
+
+/* Línea dorada superior elegante */
+.login-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #d4af37, #c9a227, #b8860b);
+}
+
+/* Logo */
+.login-screen img {
+    width: 170px;
+    margin-bottom: 50px;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.08));
+}
+
+/* Tarjeta ejecutiva */
+.login-box {
+    background: #ffffff;
+    padding: 60px;
+    border-radius: 18px;
+    border: 1px solid rgba(212,175,55,0.25);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.06);
+    width: 400px;
+    text-align: center;
+    color: #111827;
+    position: relative;
+}
+
+/* Línea dorada interna */
+.login-box::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #d4af37, #b8860b);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+}
+
+/* Título */
+.login-box h2 {
+    margin-bottom: 35px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* Inputs */
+.login-box input {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 22px;
+    border: 1px solid #e5e7eb;
+    background: #fafafa;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: #d4af37;
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+    background: white;
+}
+
+/* Botón ejecutivo premium */
+.login-box button {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    background: linear-gradient(90deg, #d4af37, #c9a227, #b8860b);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-box button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(212,175,55,0.35);
+
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(25px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+        /* DASHBOARD – WHITE GOLD EXECUTIVE */
+
+.layout {
+    display: none;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #ffffff, #f8f8f6, #f2efe9);
+    animation: fadeIn 0.5s ease;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 250px;
+    background: #ffffff;
+    border-right: 1px solid rgba(212,175,55,0.25);
+    padding: 40px 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar img {
+    width: 140px;
+    margin-bottom: 50px;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #111827;
+    padding: 14px 0;
+    font-weight: 500;
+    transition: 0.3s;
+    border-bottom: 1px solid transparent;
+}
+
+.sidebar a:hover {
+    color: #b8860b;
+    border-bottom: 1px solid #d4af37;
+}
+
+/* MAIN CONTENT */
+.main {
+    flex: 1;
+    padding: 60px;
+}
+
+/* TITULO */
+.main h2 {
+    margin-bottom: 40px;
+    font-weight: 600;
+}
+
+/* CARDS */
+.cards {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.card {
+    flex: 1;
+    background: #ffffff;
+    padding: 35px;
+    border-radius: 16px;
+    border: 1px solid rgba(212,175,55,0.25);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card p {
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.card h2 {
+    font-size: 24px;
+    color: #111827;
+}
+
+/* GRAFICA */
+canvas {
+    margin-top: 40px;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid rgba(212,175,55,0.2);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.04);
+}
+
+/* TABLA */
+table {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 16px;
+    margin-top: 40px;
+    border-collapse: collapse;
+    border: 1px solid rgba(212,175,55,0.2);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+th, td {
+    padding: 18px;
+    text-align: left;
+}
+
+th {
+    background: #fafafa;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(212,175,55,0.2);
+}
+
+tr:not(:last-child) {
+    border-bottom: 1px solid #f1f1f1;
+}
+
+/* TOPBAR EJECUTIVA */
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.welcome {
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.welcome span {
+    color: #b8860b;
+    font-weight: 600;
+}
+
+.logout-btn {
+    padding: 10px 18px;
+    border: 1px solid #d4af37;
+    background: white;
+    color: #b8860b;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.logout-btn:hover {
+    background: #d4af37;
+    color: white;
+}
+
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+    <img src="logo.png" alt="Logo">
+    <div class="login-box">
+        <h2>Iniciar Sesión</h2>
+        <input type="text" id="username" placeholder="Usuario">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Entrar</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="layout" id="dashboard">
+
+    <div class="sidebar">
+        <img src="logo.png" alt="Logo">
+        <a href="#">Dashboard</a>
+        <a href="#">Ventas</a>
+        <a href="#">Inventario</a>
+        <a href="#">Reportes</a>
+    </div>
+
+<div class="main">
+
+    <div class="topbar">
+        <div class="welcome">
+            Bienvenido, <span id="userDisplay">Admin</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
+
+    <h2>Resumen General</h2>
+
+
+        <div class="cards">
+            <div class="card">
+                <p>Ventas Hoy</p>
+                <h2 id="today">$0</h2>
+            </div>
+
+            <div class="card">
+                <p>Ventas del Mes</p>
+                <h2 id="month">$0</h2>
+            </div>
+
+            <div class="card">
+                <p>Stock Bajo</p>
+                <h2 id="lowstock">0</h2>
+            </div>
+        </div>
+
+        <canvas id="salesChart"></canvas>
+
+        <h3>Productos con Stock Bajo</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Stock</th>
+                </tr>
+            </thead>
+            <tbody id="lowStockTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const API = "https://marrokingcshop-api.onrender.com";
+
+/* 🔐 Headers con token */
+function getAuthHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+    };
+}
+
+/* 🔁 Auto login si hay token */
+window.onload = function() {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("dashboard").style.display = "flex";
+        loadData();
+    }
+};
+
+/* 🔐 LOGIN */
+async function login() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const response = await fetch(API + "/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            localStorage.setItem("token", data.access_token);
+
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("dashboard").style.display = "flex";
+
+            document.getElementById("userDisplay").innerText = username;
+
+            loadData();
+
+        } else {
+            alert(data.detail || "Credenciales incorrectas");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Error conectando con el servidor");
+    }
+}
+
+/* 🚪 LOGOUT */
+function logout() {
+
+    localStorage.removeItem("token");
+
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+}
+
+/* 📊 CARGAR DATOS PROTEGIDOS */
+async function loadData() {
+
+    try {
+
+        let today = await fetch(API + "/sales-today", {
+            headers: getAuthHeaders()
+        }).then(r => r.json());
+
+        document.getElementById("today").innerText = "$" + today.total_today;
+
+
+        let month = await fetch(API + "/sales-this-month", {
+            headers: getAuthHeaders()
+        }).then(r => r.json());
+
+        document.getElementById("month").innerText = "$" + month.total_this_month;
+
+
+        let low = await fetch(API + "/low-stock", {
+            headers: getAuthHeaders()
+        }).then(r => r.json());
+
+        document.getElementById("lowstock").innerText = low.count;
+
+        let table = document.getElementById("lowStockTable");
+        table.innerHTML = "";
+
+        low.products.forEach(p => {
+            table.innerHTML += `
+                <tr>
+                    <td>${p.name}</td>
+                    <td>${p.stock}</td>
+                </tr>
+            `;
+        });
+
+
+        let sales = await fetch(API + "/sales", {
+            headers: getAuthHeaders()
+        }).then(r => r.json());
+
+        let labels = sales.sales.map(s => "Venta " + s.id);
+        let totals = sales.sales.map(s => s.total);
+
+        if (window.salesChartInstance) {
+            window.salesChartInstance.destroy();
+        }
+
+        window.salesChartInstance = new Chart(document.getElementById("salesChart"), {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Ventas",
+                    data: totals,
+                    borderColor: "#d4af37",
+                    backgroundColor: "rgba(212,175,55,0.15)",
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error cargando datos:", error);
+        alert("Sesión expirada, vuelve a iniciar sesión");
+        logout();
+    }
+}
+</script>
+
+
+</body>
+</html>
