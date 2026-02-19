@@ -107,41 +107,53 @@
         }
     }
 
-    function renderTable(productsList) {
+function renderTable(productsList) {
         const table = document.getElementById("productTable");
         table.innerHTML = "";
 
-        // Ordenamos: Activos primero
-        const sorted = productsList.sort((a, b) => {
-            if (a.status === 'active' && b.status !== 'active') return -1;
-            if (a.status !== 'active' && b.status === 'active') return 1;
+        // 1. Ordenamiento Robusto: Forzamos minúsculas para comparar correctamente
+        const sorted = [...productsList].sort((a, b) => {
+            const statusA = String(a.status || '').toLowerCase();
+            const statusB = String(b.status || '').toLowerCase();
+            
+            if (statusA === 'active' && statusB !== 'active') return -1;
+            if (statusA !== 'active' && statusB === 'active') return 1;
             return 0;
         });
 
         sorted.forEach(p => {
-            // FILTRO MAESTRO: Oculta los null automáticos
+            // Filtro Maestro: Ignora registros sin ID real de Mercado Libre
             if (!p.meli_id || p.meli_id === 'null') return;
 
             let stockStyle = "color: #28a745; font-weight: bold;";
             let rowStyle = "";
             let statusLabel = "";
+            
+            // Convertimos a minúsculas para la lógica visual
+            const currentStatus = String(p.status || '').toLowerCase();
 
-            if (p.status !== 'active') {
-                rowStyle = "opacity: 0.5; background-color: #f8f9fa;";
-                stockStyle = "color: #6c757d;";
-                statusLabel = '<br><span style="color: #dc3545; font-size: 0.75em; font-weight: bold;">(PAUSADA EN ML)</span>';
-            } else if (p.stock === 0) {
+            // 2. Lógica para productos NO ACTIVOS (Pausados, bajo revisión, etc.)
+            if (currentStatus !== 'active' && currentStatus !== '') {
+                rowStyle = "background-color: #f2f2f2; opacity: 0.6;";
+                stockStyle = "color: #999; font-weight: normal;";
+                statusLabel = `<br><span style="color: #d9534f; font-size: 0.75em; font-weight: bold;">(PAUSADA EN ML: ${currentStatus.toUpperCase()})</span>`;
+            } 
+            // 3. Lógica para productos sin stock pero activos
+            else if (parseInt(p.stock) === 0) {
                 stockStyle = "color: #dc3545; font-weight: bold; background-color: #f8d7da; padding: 2px 5px; border-radius: 4px;";
             }
 
             table.innerHTML += `
                 <tr style="${rowStyle}">
-                    <td><div style="font-weight: 500;">${p.name}</div>${statusLabel}</td>
+                    <td>
+                        <div style="font-weight: 500;">${p.name}</div>
+                        ${statusLabel}
+                    </td>
                     <td>$${p.price}</td>
                     <td style="${stockStyle}">${p.stock}</td>
-                    <td style="font-family: monospace; color: #666;">
+                    <td style="font-family: monospace; color: #666; font-size: 0.85em;">
                         ${p.meli_id}
-                        <button onclick="deleteProduct(${p.id})" style="margin-left: 10px; color: red; cursor: pointer; border: none; background: none;">🗑️</button>
+                        <button onclick="deleteProduct(${p.id})" style="margin-left: 10px; color: red; cursor: pointer; border: none; background: none; font-size: 1.1em;">🗑️</button>
                     </td>
                 </tr>`;
         });
