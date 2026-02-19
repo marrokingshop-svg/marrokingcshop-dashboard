@@ -90,30 +90,35 @@
     }
 
     async function syncML() {
-        const token = localStorage.getItem("token");
-        if (!token) { alert("Por favor inicia sesión de nuevo"); return; }
-        
-        try {
-            const resp = await fetch(`${API}/meli/sync`, {
-                method: 'POST',
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/json"
-                }
-            });
-            if(resp.ok) { 
-                alert("¡Sincronización completa!"); 
-                loadProducts(); 
-            } else { 
-                const data = await resp.json();
-                alert("Error: " + (data.detail || "No se pudo sincronizar")); 
+    const token = localStorage.getItem("token");
+    if (!token) { alert("Sesión expirada. Por favor inicia sesión de nuevo."); return; }
+    
+    console.log("Iniciando sincronización con:", API);
+    
+    try {
+        const resp = await fetch(`${API}/meli/sync`, {
+            method: 'POST',
+            mode: 'cors', // Forzamos el modo CORS
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
-        } catch (e) { 
-            console.error(e);
-            alert("Error de conexión. Asegúrate de que Render esté activo."); 
-        }
-    }
+        });
 
+        if (resp.ok) {
+            const result = await resp.json();
+            alert("¡Éxito! Se sincronizaron " + result.items + " productos.");
+            loadProducts();
+        } else {
+            const errorData = await resp.json();
+            alert("El servidor respondió: " + (errorData.detail || "Error desconocido"));
+        }
+    } catch (e) {
+        console.error("Error detallado:", e);
+        alert("Error de conexión. Verifica que el servidor en Render no esté en 'Suspended' o 'Sleep'.");
+    }
+}
     async function loadProducts() {
         try {
             const resp = await fetch(`${API}/products`);
