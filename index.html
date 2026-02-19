@@ -22,6 +22,8 @@
         table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #fafafa; color: #d4af37; }
+        .search-container { margin: 20px 0; }
+        .search-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -51,6 +53,11 @@
             <h2>Inventario Mercado Libre</h2>
             <a href="https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=2347232636874610&redirect_uri=https://marrokingcshop-api.onrender.com/auth/callback" target="_blank" class="btn-meli">🔗 Vincular Mercado Libre</a>
             <button class="btn-sync" onclick="syncML()">🔄 Sincronizar Stock ML</button>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="🔍 Buscar por nombre de producto..." class="search-input">
+            </div>
+
             <table>
                 <thead>
                     <tr><th>Producto</th><th>Precio</th><th>Stock</th><th>ML ID</th></tr>
@@ -63,6 +70,7 @@
 
 <script>
     const API = "https://marrokingcshop-api.onrender.com";
+    let allProducts = []; // Para el buscador
 
     function showSection(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -73,130 +81,107 @@
     async function login() {
         const u = document.getElementById("username").value;
         const p = document.getElementById("password").value;
-        try {
-            const resp = await fetch(`${API}/login`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username: u, password: p})
-            });
-            const data = await resp.json();
-            if(resp.ok) {
-                localStorage.setItem("token", data.access_token);
-                document.getElementById("loginScreen").style.display = "none";
-                document.getElementById("dashboardLayout").style.display = "flex";
-                showSection('resumen');
-            } else { alert("Error: " + data.detail); }
-        } catch (e) { alert("Error de conexión"); }
-    }
-
-    async function syncML() {
-    const token = localStorage.getItem("token");
-    if (!token) { alert("Sesión expirada. Por favor inicia sesión de nuevo."); return; }
-    
-    console.log("Iniciando sincronización con:", API);
-    
-    try {
-        const resp = await fetch(`${API}/meli/sync`, {
+        const resp = await fetch(`${API}/login`, {
             method: 'POST',
-            mode: 'cors', // Forzamos el modo CORS
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: u, password: p})
         });
-
-        if (resp.ok) {
-            const result = await resp.json();
-            alert("¡Éxito! Se sincronizaron " + result.items + " productos.");
-            loadProducts();
+        if(resp.ok) {
+            const data = await resp.json();
+            localStorage.setItem("token", data.access_token);
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("dashboardLayout").style.display = "flex";
         } else {
-            const errorData = await resp.json();
-            alert("El servidor respondió: " + (errorData.detail || "Error desconocido"));
+            alert("Acceso Denegado");
         }
-    } catch (e) {
-        console.error("Error detallado:", e);
-        alert("Error de conexión. Verifica que el servidor en Render no esté en 'Suspended' o 'Sleep'.");
     }
-}
-async function loadProducts() {
-    try {
-        const resp = await fetch(`${API}/products`);
-        const data = await resp.json();
+
+    async function loadProducts() {
+        try {
+            const resp = await fetch(`${API}/products`);
+            const data = await resp.json();
+            allProducts = data.products; // Guardamos copia
+            renderTable(allProducts);
+        } catch (e) { 
+            console.error("Error cargando productos:", e); 
+        }
+    }
+
+    function renderTable(productsList) {
         const table = document.getElementById("productTable");
         table.innerHTML = "";
 
-        // Ordenamos: Primero los activos, luego los pausados
-        const sortedProducts = data.products.sort((a, b) => {
+        // Ordenamos: Activos primero
+        const sorted = productsList.sort((a, b) => {
             if (a.status === 'active' && b.status !== 'active') return -1;
             if (a.status !== 'active' && b.status === 'active') return 1;
             return 0;
         });
 
-        sortedProducts.forEach(p => {
+        sorted.forEach(p => {
+            // FILTRO MAESTRO: Oculta los null automáticos
+            if (!p.meli_id || p.meli_id === 'null') return;
+
             let stockStyle = "color: #28a745; font-weight: bold;";
             let rowStyle = "";
             let statusLabel = "";
 
-            // Lógica de filtrado visual: Pausados vs Activos
             if (p.status !== 'active') {
                 rowStyle = "opacity: 0.5; background-color: #f8f9fa;";
-                stockStyle = "color: #6c757d; font-weight: normal;";
+                stockStyle = "color: #6c757d;";
                 statusLabel = '<br><span style="color: #dc3545; font-size: 0.75em; font-weight: bold;">(PAUSADA EN ML)</span>';
             } else if (p.stock === 0) {
                 stockStyle = "color: #dc3545; font-weight: bold; background-color: #f8d7da; padding: 2px 5px; border-radius: 4px;";
-            } else if (p.stock <= 3) {
-                stockStyle = "color: #fd7e14; font-weight: bold;";
             }
 
-            // --- AQUÍ ESTÁ EL CAMBIO: AGREGAMOS EL BOTÓN 🗑️ ---
             table.innerHTML += `
                 <tr style="${rowStyle}">
-                    <td>
-                        <div style="font-weight: 500;">${p.name}</div>
-                        ${statusLabel}
-                    </td>
+                    <td><div style="font-weight: 500;">${p.name}</div>${statusLabel}</td>
                     <td>$${p.price}</td>
                     <td style="${stockStyle}">${p.stock}</td>
-                    <td style="font-family: monospace; color: #666; font-size: 0.85em;">
-                        ${p.meli_id || 'null'}
-                        <button onclick="deleteProduct(${p.id})" style="margin-left: 10px; color: red; cursor: pointer; border: none; background: none; font-size: 1.1em;" title="Eliminar registro basura">🗑️</button>
+                    <td style="font-family: monospace; color: #666;">
+                        ${p.meli_id}
+                        <button onclick="deleteProduct(${p.id})" style="margin-left: 10px; color: red; cursor: pointer; border: none; background: none;">🗑️</button>
                     </td>
                 </tr>`;
         });
-    } catch (e) { 
-        console.error("Error cargando productos:", e); 
     }
-}
 
-// NUEVA FUNCIÓN (Pégala debajo de loadProducts)
-async function deleteProduct(id) {
-    if (!confirm("¿Deseas eliminar este registro de tu inventario local?")) return;
-    try {
+    function filterProducts() {
+        const text = document.getElementById("searchInput").value.toLowerCase();
+        const filtered = allProducts.filter(p => p.name.toLowerCase().includes(text));
+        renderTable(filtered);
+    }
+
+    async function syncML() {
+        const btn = document.querySelector(".btn-sync");
+        btn.innerText = "⏳ Sincronizando...";
+        try {
+            const resp = await fetch(`${API}/meli/sync`, {
+                method: 'POST',
+                headers: {'Authorization': `Bearer ${localStorage.getItem("token")}`}
+            });
+            if(resp.ok) {
+                alert("Sincronización Exitosa");
+                loadProducts();
+            }
+        } catch(e) { alert("Error en sincronización"); }
+        btn.innerText = "🔄 Sincronizar Stock ML";
+    }
+
+    async function deleteProduct(id) {
+        if (!confirm("¿Eliminar este registro?")) return;
         const resp = await fetch(`${API}/products/${id}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+            headers: {'Authorization': `Bearer ${localStorage.getItem("token")}`}
         });
-        if (resp.ok) {
-            loadProducts(); // Recarga la tabla
-        } else {
-            alert("Error al eliminar");
-        }
-    } catch (e) {
-        console.error("Error:", e);
-    }
-}
-
-    function logout() { 
-        localStorage.clear(); 
-        location.reload(); 
+        if(resp.ok) loadProducts();
+        else alert("Error al eliminar");
     }
 
-    // Verificar si ya está logueado al cargar
-    if(localStorage.getItem("token")) {
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("dashboardLayout").style.display = "flex";
-        loadProducts(); // Aseguramos que cargue los productos al iniciar
+    function logout() {
+        localStorage.clear();
+        location.reload();
     }
 </script>
 </body>
