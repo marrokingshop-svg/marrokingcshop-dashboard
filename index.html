@@ -125,18 +125,41 @@
             const data = await resp.json();
             const table = document.getElementById("productTable");
             table.innerHTML = "";
+
             data.products.forEach(p => {
-                table.innerHTML += `<tr><td>${p.name}</td><td>$${p.price}</td><td>${p.stock}</td><td>${p.meli_id || 'Sin vincular'}</td></tr>`;
+                // --- LÓGICA DE COLORES PARA STOCK ---
+                let stockStyle = "color: #28a745; font-weight: bold;"; // Verde por defecto
+
+                if (p.stock === 0) {
+                    stockStyle = "color: #dc3545; font-weight: bold; background-color: #f8d7da; padding: 2px 5px; border-radius: 4px;"; // Rojo y fondo rosado si es 0
+                } else if (p.stock <= 3) {
+                    stockStyle = "color: #fd7e14; font-weight: bold;"; // Naranja si es 3 o menos
+                }
+
+                // --- DIBUJAR LA FILA ---
+                table.innerHTML += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td>$${p.price}</td>
+                        <td style="${stockStyle}">${p.stock}</td>
+                        <td style="font-family: monospace; color: #666;">${p.meli_id || 'Sin vincular'}</td>
+                    </tr>`;
             });
-        } catch (e) { console.error("Error cargando productos:", e); }
+        } catch (e) { 
+            console.error("Error cargando productos:", e); 
+        }
     }
 
-    function logout() { localStorage.clear(); location.reload(); }
+    function logout() { 
+        localStorage.clear(); 
+        location.reload(); 
+    }
 
     // Verificar si ya está logueado al cargar
     if(localStorage.getItem("token")) {
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("dashboardLayout").style.display = "flex";
+        loadProducts(); // Aseguramos que cargue los productos al iniciar
     }
 </script>
 </body>
