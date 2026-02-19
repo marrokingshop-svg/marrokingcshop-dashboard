@@ -120,50 +120,72 @@
     }
 }
 async function loadProducts() {
-        try {
-            const resp = await fetch(`${API}/products`);
-            const data = await resp.json();
-            const table = document.getElementById("productTable");
-            table.innerHTML = "";
+    try {
+        const resp = await fetch(`${API}/products`);
+        const data = await resp.json();
+        const table = document.getElementById("productTable");
+        table.innerHTML = "";
 
-            // Ordenamos: Primero los activos, luego los pausados
-            const sortedProducts = data.products.sort((a, b) => {
-                if (a.status === 'active' && b.status !== 'active') return -1;
-                if (a.status !== 'active' && b.status === 'active') return 1;
-                return 0;
-            });
+        // Ordenamos: Primero los activos, luego los pausados
+        const sortedProducts = data.products.sort((a, b) => {
+            if (a.status === 'active' && b.status !== 'active') return -1;
+            if (a.status !== 'active' && b.status === 'active') return 1;
+            return 0;
+        });
 
-            sortedProducts.forEach(p => {
-                let stockStyle = "color: #28a745; font-weight: bold;";
-                let rowStyle = "";
-                let statusLabel = "";
+        sortedProducts.forEach(p => {
+            let stockStyle = "color: #28a745; font-weight: bold;";
+            let rowStyle = "";
+            let statusLabel = "";
 
-                // Lógica de filtrado visual: Pausados vs Activos
-                if (p.status !== 'active') {
-                    rowStyle = "opacity: 0.5; background-color: #f8f9fa;";
-                    stockStyle = "color: #6c757d; font-weight: normal;";
-                    statusLabel = '<br><span style="color: #dc3545; font-size: 0.75em; font-weight: bold;">(PAUSADA EN ML)</span>';
-                } else if (p.stock === 0) {
-                    stockStyle = "color: #dc3545; font-weight: bold; background-color: #f8d7da; padding: 2px 5px; border-radius: 4px;";
-                } else if (p.stock <= 3) {
-                    stockStyle = "color: #fd7e14; font-weight: bold;";
-                }
+            // Lógica de filtrado visual: Pausados vs Activos
+            if (p.status !== 'active') {
+                rowStyle = "opacity: 0.5; background-color: #f8f9fa;";
+                stockStyle = "color: #6c757d; font-weight: normal;";
+                statusLabel = '<br><span style="color: #dc3545; font-size: 0.75em; font-weight: bold;">(PAUSADA EN ML)</span>';
+            } else if (p.stock === 0) {
+                stockStyle = "color: #dc3545; font-weight: bold; background-color: #f8d7da; padding: 2px 5px; border-radius: 4px;";
+            } else if (p.stock <= 3) {
+                stockStyle = "color: #fd7e14; font-weight: bold;";
+            }
 
-                table.innerHTML += `
-                    <tr style="${rowStyle}">
-                        <td>
-                            <div style="font-weight: 500;">${p.name}</div>
-                            ${statusLabel}
-                        </td>
-                        <td>$${p.price}</td>
-                        <td style="${stockStyle}">${p.stock}</td>
-                        <td style="font-family: monospace; color: #666; font-size: 0.85em;">${p.meli_id}</td>
-                    </tr>`;
-            });
-        } catch (e) { 
-            console.error("Error cargando productos:", e); 
-        }
+            // --- AQUÍ ESTÁ EL CAMBIO: AGREGAMOS EL BOTÓN 🗑️ ---
+            table.innerHTML += `
+                <tr style="${rowStyle}">
+                    <td>
+                        <div style="font-weight: 500;">${p.name}</div>
+                        ${statusLabel}
+                    </td>
+                    <td>$${p.price}</td>
+                    <td style="${stockStyle}">${p.stock}</td>
+                    <td style="font-family: monospace; color: #666; font-size: 0.85em;">
+                        ${p.meli_id || 'null'}
+                        <button onclick="deleteProduct(${p.id})" style="margin-left: 10px; color: red; cursor: pointer; border: none; background: none; font-size: 1.1em;" title="Eliminar registro basura">🗑️</button>
+                    </td>
+                </tr>`;
+        });
+    } catch (e) { 
+        console.error("Error cargando productos:", e); 
     }
+}
+
+// NUEVA FUNCIÓN (Pégala debajo de loadProducts)
+async function deleteProduct(id) {
+    if (!confirm("¿Deseas eliminar este registro de tu inventario local?")) return;
+    try {
+        const resp = await fetch(`${API}/products/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+        });
+        if (resp.ok) {
+            loadProducts(); // Recarga la tabla
+        } else {
+            alert("Error al eliminar");
+        }
+    } catch (e) {
+        console.error("Error:", e);
+    }
+}
 
     function logout() { 
         localStorage.clear(); 
