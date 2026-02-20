@@ -286,6 +286,11 @@ def get_products_grouped():
     grouped = {}
 
     for r in rows:
+        # --- ESTA ES LA CORRECCIÓN CRÍTICA ---
+        if not r["meli_id"]: 
+            continue # Si el ID está vacío, ignora este producto y sigue con el otro
+        # -------------------------------------
+
         base_id = r["meli_id"].split("-")[0]
         title = r["name"].split("(")[0].strip()
 
@@ -293,10 +298,12 @@ def get_products_grouped():
             grouped[base_id] = {
                 "title": title,
                 "status": r["status"],
+                "meli_item_id": base_id, # Agregamos esto para que se vea en la tabla
                 "variations": []
             }
 
         grouped[base_id]["variations"].append({
+            "meli_id": r["meli_id"],
             "name": r["name"],
             "price": float(r["price"]) if r["price"] else 0,
             "stock": r["stock"] or 0
