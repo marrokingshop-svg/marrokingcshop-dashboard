@@ -109,15 +109,15 @@ async function login(){
 
 // CARGAR PRODUCTOS
 async function loadProducts(){
-    const resp = await fetch(API + "/products-grouped");
-    const data = await resp.json();
-    allProducts = data.products || [];
-    applyFilters();
-}
+    const resp = await fetch(API + "/products-grouped", {
+        headers:{
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    });
 
-// FILTROS
-function setStatusFilter(status){
-    currentStatusFilter = status;
+    const data = await resp.json();
+    console.log("PRODUCTS:", data); // 👈 debug útil
+    allProducts = data.products || [];
     applyFilters();
 }
 
@@ -142,16 +142,17 @@ function applyFilters(){
         });
     }
 
-    // Filtro texto
-    if(text){
-        filtered = filtered.filter(p =>
-            p.title.toLowerCase().includes(text) ||
-            (p.variations || []).some(v => v.name.toLowerCase().includes(text))
-        );
-    }
-
-    renderTable(filtered);
+  // Filtro texto
+if(text){
+    filtered = filtered.filter(p =>
+        (p.title || "").toLowerCase().includes(text) ||
+        (p.variations || []).some(v =>
+            (v.name || "").toLowerCase().includes(text)
+        )
+    );
 }
+
+renderTable(filtered);
 
 // TABLA
 function renderTable(productsList){
