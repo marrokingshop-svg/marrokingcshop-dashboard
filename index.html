@@ -14,14 +14,15 @@
 
         .layout { display: none; min-height: 100vh; }
         .sidebar { width: 250px; background: #ffffff; border-right: 1px solid rgba(212,175,55,0.25); padding: 40px 25px; position: fixed; height: 100vh; }
-        .sidebar a { display: block; padding: 12px 0; cursor: pointer; }
-        .main { margin-left: 300px; padding: 50px; }
+        .sidebar a { display: block; padding: 12px 0; cursor: pointer; color: #333; text-decoration: none;}
+        .sidebar a:hover { color: #d4af37; }
+        .main { margin-left: 300px; padding: 50px; width: 100%;}
 
-        table { width: 100%; background: white; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; background: white; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);}
         th, td { padding: 12px; border-bottom: 1px solid #eee; }
-        th { background: #fafafa; color: #d4af37; }
+        th { background: #fafafa; color: #d4af37; text-align: left; }
 
-        .search-input { width: 100%; padding: 10px; margin-top: 10px; }
+        .search-input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         .btn { padding: 8px 14px; margin: 5px; cursor: pointer; border: none; border-radius: 6px; }
         .btn-sync { background: #3483fa; color: white; }
     </style>
@@ -29,7 +30,6 @@
 
 <body>
 
-<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
     <div class="login-box">
         <h2>MARROKING SHOP</h2>
@@ -39,12 +39,13 @@
     </div>
 </div>
 
-<!-- DASHBOARD -->
 <div class="layout" id="dashboardLayout">
     <div class="sidebar">
         <h3 style="color:#d4af37;">MENÚ</h3>
-        <a onclick="loadProducts()">Inventario ML</a>
-        <a onclick="logout()">Cerrar sesión</a>
+        <a onclick="showSection('inventario')">📦 Inventario ML</a>
+        <a onclick="showSection('editarStock')">✏️ Editar Stock</a>
+        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+        <a onclick="logout()" style="color: red;">Cerrar sesión</a>
     </div>
 
     <div class="main">
@@ -55,11 +56,11 @@
 
             <input id="searchInput" class="search-input" placeholder="Buscar producto..." onkeyup="applyFilters()">
 
-            <div>
-                <button class="btn" onclick="setStatusFilter('all')">Todas</button>
-                <button class="btn" onclick="setStatusFilter('active')">Activas</button>
-                <button class="btn" onclick="setStatusFilter('paused')">Pausadas/Cerradas</button>
-                <button class="btn" onclick="setStatusFilter('nostock')">Sin stock</button>
+            <div style="margin-top: 15px;">
+                <button class="btn" style="background:#eee" onclick="setStatusFilter('all')">Todas</button>
+                <button class="btn" style="background:#e6f4ea; color:#137333;" onclick="setStatusFilter('active')">Activas</button>
+                <button class="btn" style="background:#fce8e6; color:#c5221f;" onclick="setStatusFilter('paused')">Pausadas/Cerradas</button>
+                <button class="btn" style="background:#fef7e0; color:#b06000;" onclick="setStatusFilter('nostock')">Sin stock</button>
             </div>
 
             <table>
@@ -74,6 +75,28 @@
                 <tbody id="productTable"></tbody>
             </table>
         </div>
+
+        <div id="editarStock" style="display:none;">
+            <h2>Control y Edición de Stock</h2>
+            <p style="color: gray; margin-bottom: 20px;">Los cambios realizados aquí se reflejarán directamente en Mercado Libre.</p>
+
+            <input id="searchStockInput" class="search-input" placeholder="🔍 Buscar producto por nombre o ID..." onkeyup="filterStock()">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">Foto</th>
+                        <th>Producto / Talla</th>
+                        <th>ID MELI</th>
+                        <th style="text-align:center;">Stock Actual</th>
+                        <th style="text-align:center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="stockEditorTable">
+                    </tbody>
+            </table>
+        </div>
+
     </div>
 </div>
 
@@ -82,6 +105,13 @@ const API = "https://marrokingcshop-api.onrender.com";
 
 let allProducts = [];
 let currentStatusFilter = "all";
+
+// ===== NAVEGACIÓN ENTRE PANTALLAS =====
+function showSection(sectionId) {
+    document.getElementById('inventario').style.display = 'none';
+    document.getElementById('editarStock').style.display = 'none';
+    document.getElementById(sectionId).style.display = 'block';
+}
 
 // ===== AUTO LOGIN =====
 window.onload = function(){
@@ -118,27 +148,27 @@ window.login = async function () {
 
 // ===== CARGAR PRODUCTOS =====
 async function loadProducts(){
-    // Limpiamos la tabla antes de cargar para evitar ver datos viejos
     document.getElementById("productTable").innerHTML = "<tr><td colspan='4'>Cargando datos frescos...</td></tr>";
+    document.getElementById("stockEditorTable").innerHTML = "<tr><td colspan='5'>Cargando datos frescos...</td></tr>";
     
     try {
         const resp = await fetch(API + "/products-grouped", {
-            headers:{
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            }
+            headers:{ "Authorization": "Bearer " + localStorage.getItem("token") }
         });
 
         const data = await resp.json();
-        console.log("DATOS RECIBIDOS:", data);
         allProducts = data.products || [];
-        applyFilters();
+        
+        // Llenamos ambas tablas
+        applyFilters(); 
+        renderStockTable(allProducts); 
+        
     } catch (error) {
-        console.error("Error al cargar:", error);
         alert("Error al conectar con el servidor");
     }
 }
 
-// ===== FILTROS (REVISADO PARA QUITAR STOCK 0 DE ACTIVAS) =====
+// ===== FILTROS PANTALLA 1 =====
 function setStatusFilter(status){
     currentStatusFilter = status;
     applyFilters();
@@ -147,43 +177,26 @@ function setStatusFilter(status){
 function applyFilters(){
     const searchInput = document.getElementById("searchInput");
     const text = (searchInput.value || "").toLowerCase().trim();
-
     let filtered = [...allProducts];
 
-    // FILTRO DE ESTADO INTELIGENTE
     if(currentStatusFilter === "active"){
-        // SOLO lo que sea 'active' Y tenga stock mayor a 0
-        filtered = filtered.filter(p => {
-            let total = 0;
-            (p.variations || []).forEach(v => total += v.stock);
-            return p.status === "active" && total > 0;
-        });
+        filtered = filtered.filter(p => p.status === "active" && p.stock > 0);
     } 
     else if(currentStatusFilter === "paused"){
-        // Todo lo que NO sea active (pausadas, cerradas, etc.)
         filtered = filtered.filter(p => p.status !== "active");
     } 
     else if(currentStatusFilter === "nostock"){
-        // TODO lo que tenga stock 0, sin importar si MELI dice que está activa o no
-        filtered = filtered.filter(p => {
-            let total = 0;
-            (p.variations || []).forEach(v => total += v.stock);
-            return total === 0;
-        });
+        filtered = filtered.filter(p => p.stock === 0);
     }
     
-    // Filtro de texto (esto se queda igual abajo)
     if(text){
-        filtered = filtered.filter(p =>
-            (p.title || "").toLowerCase().includes(text) ||
-            (p.variations || []).some(v => (v.name || "").toLowerCase().includes(text))
-        );
+        filtered = filtered.filter(p => (p.title || "").toLowerCase().includes(text));
     }
 
     renderTable(filtered);
 }
 
-// ===== RENDERIZAR TABLA =====
+// ===== RENDERIZAR TABLA PANTALLA 1 =====
 function renderTable(productsList){
     const table = document.getElementById("productTable");
     table.innerHTML = ""; 
@@ -196,35 +209,109 @@ function renderTable(productsList){
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
     productsList.forEach(item => {
-        const hasVariations = item.variations && item.variations.length > 0;
         const status = (item.status || "").toLowerCase();
         let rowStyle = status !== "active" ? "background:#f9f9f9; color:#666;" : "";
 
-        // CASO 1: Es un producto SENCILLO (Sin variantes)
-        if (!hasVariations) {
-            table.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td><strong>${item.title}</strong></td>
-                    <td>$${item.price || 0}</td>
-                    <td style="font-weight:bold; color:${item.stock === 0 ? 'red' : 'green'};">${item.stock}</td>
-                    <td style="font-family:monospace; font-size:12px;">${item.meli_item_id || item.meli_id || ""}</td>
-                </tr>
-            `;
-        } 
-        // CASO 2: Tiene VARIANTES (Ocultamos el total verde y solo mostramos el desglose)
-        else {
-            item.variations.forEach(v => {
-                table.innerHTML += `
-                    <tr style="${rowStyle}">
-                        <td style="padding-left:15px;">└ ${v.name}</td>
-                        <td>$${v.price || item.price || 0}</td>
-                        <td style="font-weight:bold; color:${v.stock === 0 ? 'red' : 'black'};">${v.stock}</td>
-                        <td style="font-family:monospace; font-size:11px;">${v.meli_id}</td>
-                    </tr>
-                `;
-            });
-        }
+        table.innerHTML += `
+            <tr style="${rowStyle}">
+                <td><strong>${item.title}</strong></td>
+                <td>$${item.price || 0}</td>
+                <td style="font-weight:bold; color:${item.stock === 0 ? 'red' : 'green'};">${item.stock}</td>
+                <td style="font-family:monospace; font-size:12px;">${item.meli_item_id || ""}</td>
+            </tr>
+        `;
     });
+}
+
+// ===== RENDERIZAR TABLA PANTALLA 2 (EDITAR STOCK) =====
+function renderStockTable(productsList) {
+    const table = document.getElementById("stockEditorTable");
+    table.innerHTML = ""; 
+
+    if(productsList.length === 0) {
+        table.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>No se encontraron productos</td></tr>";
+        return;
+    }
+
+    // Ordenar por nombre
+    productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
+
+    productsList.forEach(item => {
+        let photo = item.thumbnail ? `<img src="${item.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; border: 1px solid #ccc;">` : "📷";
+        
+        table.innerHTML += `
+            <tr>
+                <td style="text-align:center;">${photo}</td>
+                <td><strong>${item.title}</strong></td>
+                <td style="font-family:monospace; font-size:12px; color:gray;">${item.meli_item_id}</td>
+                <td style="text-align:center; font-size:20px; font-weight:bold;">
+                    <span id="stock-val-${item.meli_item_id}">${item.stock}</span>
+                </td>
+                <td style="text-align:center;">
+                    <button onclick="changeStock('${item.meli_item_id}', -1)" style="padding:8px 12px; font-size: 16px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer;">-</button>
+                    <button onclick="changeStock('${item.meli_item_id}', 1)" style="padding:8px 12px; font-size: 16px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right: 15px;">+</button>
+                    <button onclick="saveStockToMeli('${item.meli_item_id}')" style="padding:8px 15px; background:#3483fa; color:white; border:none; border-radius:4px; cursor:pointer; font-weight: bold;">💾 Guardar en MELI</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ===== FUNCIONES DE EDICIÓN =====
+function changeStock(id, amount) {
+    let span = document.getElementById(`stock-val-${id}`);
+    let current = parseInt(span.innerText);
+    let newStock = current + amount;
+    if (newStock < 0) newStock = 0; 
+    span.innerText = newStock;
+}
+
+async function saveStockToMeli(id) {
+    let span = document.getElementById(`stock-val-${id}`);
+    let newStock = parseInt(span.innerText);
+    let token = localStorage.getItem("token");
+
+    let btn = event.target;
+    let originalText = btn.innerText;
+    btn.innerText = "⏳ Guardando...";
+    btn.disabled = true;
+    btn.style.background = "#ccc";
+
+    try {
+        let response = await fetch(`${API}/meli/update_stock/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ new_stock: newStock })
+        });
+
+        if (response.ok) {
+            alert("✅ Stock actualizado en Mercado Libre!");
+            // Actualizamos la variable global
+            let prod = allProducts.find(p => p.meli_item_id === id);
+            if(prod) prod.stock = newStock;
+            applyFilters(); // Para que se actualice la pantalla 1 también
+        } else {
+            alert("❌ Error al actualizar el stock en MELI");
+        }
+    } catch (error) {
+        alert("❌ Error de conexión");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.style.background = "#3483fa";
+    }
+}
+
+function filterStock() {
+    let text = document.getElementById("searchStockInput").value.toLowerCase();
+    let filtered = allProducts.filter(p => 
+        (p.title || "").toLowerCase().includes(text) || 
+        (p.meli_item_id || "").toLowerCase().includes(text)
+    );
+    renderStockTable(filtered);
 }
 
 // ===== SINCRONIZAR =====
@@ -241,7 +328,7 @@ async function syncML(){
         });
 
         if(resp.ok){
-            alert("¡Sincronización Profunda Exitosa! Los datos se han actualizado.");
+            alert("¡Sincronización Exitosa! Datos actualizados.");
             await loadProducts();
         } else {
             alert("Error en el servidor al sincronizar");
@@ -262,4 +349,4 @@ function logout(){
 </script>
 
 </body>
-</html> 
+</html>
