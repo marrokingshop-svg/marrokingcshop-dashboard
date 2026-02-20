@@ -86,7 +86,7 @@ let allProducts = [];
 let currentStatusFilter = "all";
 
 // LOGIN
-async function login(){
+window.login = async function () {
     const resp = await fetch(API + "/login", {
         method:"POST",
         headers: {"Content-Type":"application/json"},
