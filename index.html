@@ -86,7 +86,6 @@ let currentStatusFilter = "all";
 // ===== AUTO LOGIN =====
 window.onload = function(){
     const token = localStorage.getItem("token");
-
     if(token){
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("dashboardLayout").style.display = "flex";
@@ -109,8 +108,6 @@ window.login = async function () {
     });
 
     const data = await resp.json();
-    console.log("LOGIN:", data);
-
     if (data.access_token) {
         localStorage.setItem("token", data.access_token);
         location.reload();
@@ -121,19 +118,27 @@ window.login = async function () {
 
 // ===== CARGAR PRODUCTOS =====
 async function loadProducts(){
-    const resp = await fetch(API + "/products-grouped", {
-        headers:{
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        }
-    });
+    // Limpiamos la tabla antes de cargar para evitar ver datos viejos
+    document.getElementById("productTable").innerHTML = "<tr><td colspan='4'>Cargando datos frescos...</td></tr>";
+    
+    try {
+        const resp = await fetch(API + "/products-grouped", {
+            headers:{
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        });
 
-    const data = await resp.json();
-    console.log("PRODUCTS:", data);
-    allProducts = data.products || [];
-    applyFilters();
+        const data = await resp.json();
+        console.log("DATOS RECIBIDOS:", data);
+        allProducts = data.products || [];
+        applyFilters();
+    } catch (error) {
+        console.error("Error al cargar:", error);
+        alert("Error al conectar con el servidor");
+    }
 }
 
-// ===== FILTROS =====
+// ===== FILTROS (EL CORAZÓN DEL CAMBIO) =====
 function setStatusFilter(status){
     currentStatusFilter = status;
     applyFilters();
@@ -141,20 +146,18 @@ function setStatusFilter(status){
 
 function applyFilters(){
     const searchInput = document.getElementById("searchInput");
-    const text = (searchInput.value || "").toLowerCase();
+    const text = (searchInput.value || "").toLowerCase().trim();
 
-    // 1. Empezamos siempre con todos los productos
     let filtered = [...allProducts];
 
-    // 2. Aplicamos UN SOLO filtro de estado a la vez
+    // FILTRO DE ESTADO ESTRICTO
     if(currentStatusFilter === "active"){
-        // Solo lo que sea estrictamente active
+        // SOLO lo que MELI diga que es active
         filtered = filtered.filter(p => p.status === "active");
     } 
     else if(currentStatusFilter === "paused"){
-        // Atrapamos todo lo que NO sea venta inmediata
-        const pausedStates = ["paused", "closed", "under_review", "inactive"];
-        filtered = filtered.filter(p => pausedStates.includes(p.status));
+        // Todo lo que NO sea active se va a esta pestaña
+        filtered = filtered.filter(p => p.status !== "active");
     } 
     else if(currentStatusFilter === "nostock"){
         filtered = filtered.filter(p => {
@@ -164,28 +167,31 @@ function applyFilters(){
         });
     }
 
-    // 3. Al final, sobre lo que ya filtramos por estado, filtramos por texto
+    // FILTRO DE BÚSQUEDA
     if(text){
         filtered = filtered.filter(p =>
             (p.title || "").toLowerCase().includes(text) ||
-            (p.variations || []).some(v =>
-                (v.name || "").toLowerCase().includes(text)
-            )
+            (p.variations || []).some(v => (v.name || "").toLowerCase().includes(text))
         );
     }
 
     renderTable(filtered);
 }
 
-// ===== TABLA =====
+// ===== RENDERIZAR TABLA =====
 function renderTable(productsList){
     const table = document.getElementById("productTable");
-    table.innerHTML = "";
+    table.innerHTML = ""; // Limpieza total de la tabla
 
+    if(productsList.length === 0) {
+        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>No se encontraron productos en esta categoría</td></tr>";
+        return;
+    }
+
+    // Ordenar alfabéticamente
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
     productsList.forEach(item => {
-
         let totalStock = 0;
         (item.variations || []).forEach(v => totalStock += v.stock);
 
@@ -194,50 +200,62 @@ function renderTable(productsList){
         let stockStyle = "color:green;font-weight:bold;";
         let statusLabel = "";
 
-        if(status && status !== "active"){
-            rowStyle = "background:#f2f2f2;opacity:0.6;";
-            statusLabel = `<div style="color:red;font-size:12px;">(${status.toUpperCase()})</div>`;
+        // Si el producto no es activo, le ponemos un estilo visual distinto
+        if(status !== "active"){
+            rowStyle = "background:#f9f9f9; color:#666;";
+            statusLabel = `<span style="color:#d9534f; font-size:10px; margin-left:10px; border:1px solid; padding:2px 4px; border-radius:4px;">${status.toUpperCase()}</span>`;
         }
 
-        if(totalStock === 0){
-            stockStyle = "color:red;font-weight:bold;";
-        }
+        if(totalStock === 0) stockStyle = "color:red;font-weight:bold;";
 
+        // Fila Principal
         table.innerHTML += `
             <tr style="${rowStyle}">
-                <td><b>${item.title}</b>${statusLabel}</td>
+                <td><div style="display:flex; align-items:center;"><strong>${item.title}</strong> ${statusLabel}</div></td>
                 <td>$${item.variations?.[0]?.price || 0}</td>
                 <td style="${stockStyle}">${totalStock}</td>
-                <td>${item.meli_item_id || ""}</td>
+                <td style="font-family:monospace; font-size:12px;">${item.meli_item_id || ""}</td>
             </tr>
         `;
 
+        // Filas de Variaciones
         (item.variations || []).forEach(v => {
             table.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td style="padding-left:30px;">└ ${v.name}</td>
+                <tr style="${rowStyle} border-bottom: 1px dashed #eee;">
+                    <td style="padding-left:30px; font-size:13px; color:#555;">└ ${v.name}</td>
                     <td></td>
-                    <td>${v.stock}</td>
-                    <td style="font-size:11px;">${v.meli_id}</td>
+                    <td style="font-size:13px;">${v.stock}</td>
+                    <td style="font-size:11px; color:#999; font-family:monospace;">${v.meli_id}</td>
                 </tr>
             `;
         });
-
     });
 }
 
 // ===== SINCRONIZAR =====
 async function syncML(){
-    const resp = await fetch(API + "/meli/sync", {
-        method:"POST",
-        headers:{ "Authorization": "Bearer " + localStorage.getItem("token") }
-    });
+    const btn = document.querySelector(".btn-sync");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⌛ Sincronizando...";
+    btn.disabled = true;
 
-    if(resp.ok){
-        alert("Sincronizado correctamente");
-        loadProducts();
-    } else {
-        alert("Error al sincronizar");
+    try {
+        const resp = await fetch(API + "/meli/sync", {
+            method:"POST",
+            headers:{ "Authorization": "Bearer " + localStorage.getItem("token") }
+        });
+
+        if(resp.ok){
+            alert("¡Sincronización Profunda Exitosa! Los datos se han actualizado.");
+            await loadProducts();
+        } else {
+            alert("Error en el servidor al sincronizar");
+        }
+    } catch (e) {
+        alert("Error de conexión");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 }
 
