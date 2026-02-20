@@ -186,54 +186,44 @@ function applyFilters(){
 // ===== RENDERIZAR TABLA =====
 function renderTable(productsList){
     const table = document.getElementById("productTable");
-    table.innerHTML = ""; // Limpieza total de la tabla
+    table.innerHTML = ""; 
 
     if(productsList.length === 0) {
-        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>No se encontraron productos en esta categoría</td></tr>";
+        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>No se encontraron productos</td></tr>";
         return;
     }
 
-    // Ordenar alfabéticamente
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
     productsList.forEach(item => {
-        let totalStock = 0;
-        (item.variations || []).forEach(v => totalStock += v.stock);
-
+        const hasVariations = item.variations && item.variations.length > 0;
         const status = (item.status || "").toLowerCase();
-        let rowStyle = "";
-        let stockStyle = "color:green;font-weight:bold;";
-        let statusLabel = "";
+        let rowStyle = status !== "active" ? "background:#f9f9f9; color:#666;" : "";
 
-        // Si el producto no es activo, le ponemos un estilo visual distinto
-        if(status !== "active"){
-            rowStyle = "background:#f9f9f9; color:#666;";
-            statusLabel = `<span style="color:#d9534f; font-size:10px; margin-left:10px; border:1px solid; padding:2px 4px; border-radius:4px;">${status.toUpperCase()}</span>`;
-        }
-
-        if(totalStock === 0) stockStyle = "color:red;font-weight:bold;";
-
-        // Fila Principal
-        table.innerHTML += `
-            <tr style="${rowStyle}">
-                <td><div style="display:flex; align-items:center;"><strong>${item.title}</strong> ${statusLabel}</div></td>
-                <td>$${item.variations?.[0]?.price || 0}</td>
-                <td style="${stockStyle}">${totalStock}</td>
-                <td style="font-family:monospace; font-size:12px;">${item.meli_item_id || ""}</td>
-            </tr>
-        `;
-
-        // Filas de Variaciones
-        (item.variations || []).forEach(v => {
+        // CASO 1: Es un producto SENCILLO (Sin variantes)
+        if (!hasVariations) {
             table.innerHTML += `
-                <tr style="${rowStyle} border-bottom: 1px dashed #eee;">
-                    <td style="padding-left:30px; font-size:13px; color:#555;">└ ${v.name}</td>
-                    <td></td>
-                    <td style="font-size:13px;">${v.stock}</td>
-                    <td style="font-size:11px; color:#999; font-family:monospace;">${v.meli_id}</td>
+                <tr style="${rowStyle}">
+                    <td><strong>${item.title}</strong></td>
+                    <td>$${item.price || 0}</td>
+                    <td style="font-weight:bold; color:${item.stock === 0 ? 'red' : 'green'};">${item.stock}</td>
+                    <td style="font-family:monospace; font-size:12px;">${item.meli_item_id || item.meli_id || ""}</td>
                 </tr>
             `;
-        });
+        } 
+        // CASO 2: Tiene VARIANTES (Ocultamos el total verde y solo mostramos el desglose)
+        else {
+            item.variations.forEach(v => {
+                table.innerHTML += `
+                    <tr style="${rowStyle}">
+                        <td style="padding-left:15px;">└ ${v.name}</td>
+                        <td>$${v.price || item.price || 0}</td>
+                        <td style="font-weight:bold; color:${v.stock === 0 ? 'red' : 'black'};">${v.stock}</td>
+                        <td style="font-family:monospace; font-size:11px;">${v.meli_id}</td>
+                    </tr>
+                `;
+            });
+        }
     });
 }
 
