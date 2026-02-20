@@ -3,175 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <title>Marroking Shop - Sistema Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
         body { margin: 0; font-family: 'Inter', sans-serif; background: #f4f6f9; }
         .login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #ffffff; }
         .login-box { padding: 60px; border-radius: 18px; border: 1px solid rgba(212,175,55,0.25); box-shadow: 0 30px 60px rgba(0,0,0,0.06); width: 400px; text-align: center; }
-        .login-box input { width: 100%; padding: 16px; margin-bottom: 22px; border: 1px solid #e5e7eb; border-radius: 12px; box-sizing: border-box; }
+        .login-box input { width: 100%; padding: 16px; margin-bottom: 22px; border: 1px solid #e5e7eb; border-radius: 12px; }
         .login-box button { width: 100%; padding: 16px; border: none; background: linear-gradient(90deg, #d4af37, #b8860b); color: white; border-radius: 12px; font-weight: 600; cursor: pointer; }
-        .layout { display: none; min-height: 100vh; width: 100%; }
-        .sidebar { width: 250px; background: #ffffff; border-right: 1px solid rgba(212,175,55,0.25); padding: 40px 25px; display: flex; flex-direction: column; height: 100vh; position: fixed; }
-        .sidebar a { text-decoration: none; color: #111827; padding: 14px 0; font-weight: 500; cursor: pointer; display: block; }
-        .main { flex: 1; margin-left: 300px; padding: 60px; }
-        .section { display: none; }
-        .active { display: block; }
-        .btn-meli { background: #ffe600; color: #2d3277; padding: 12px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block; margin-bottom: 20px; }
-        .btn-sync { background: #3483fa; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; margin-top: 20px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+
+        .layout { display: none; min-height: 100vh; }
+        .sidebar { width: 250px; background: #ffffff; border-right: 1px solid rgba(212,175,55,0.25); padding: 40px 25px; position: fixed; height: 100vh; }
+        .sidebar a { display: block; padding: 12px 0; cursor: pointer; }
+        .main { margin-left: 300px; padding: 50px; }
+
+        table { width: 100%; background: white; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; }
         th { background: #fafafa; color: #d4af37; }
-        .search-container { margin: 20px 0; }
-        .search-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
+
+        .search-input { width: 100%; padding: 10px; margin-top: 10px; }
+        .btn { padding: 8px 14px; margin: 5px; cursor: pointer; border: none; border-radius: 6px; }
+        .btn-sync { background: #3483fa; color: white; }
     </style>
 </head>
+
 <body>
 
+<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
     <div class="login-box">
         <h2>MARROKING SHOP</h2>
-        <input type="text" id="username" placeholder="Usuario">
-        <input type="password" id="password" placeholder="Contraseña">
+        <input id="username" placeholder="Usuario">
+        <input id="password" type="password" placeholder="Contraseña">
         <button onclick="login()">ACCEDER</button>
     </div>
 </div>
 
+<!-- DASHBOARD -->
 <div class="layout" id="dashboardLayout">
     <div class="sidebar">
-        <h3 style="color: #d4af37;">MENÚ</h3>
-        <a onclick="showSection('resumen')">Dashboard</a>
+        <h3 style="color:#d4af37;">MENÚ</h3>
         <a onclick="showSection('inventario')">Inventario ML</a>
-        <a onclick="logout()">Cerrar Sesión</a>
+        <a onclick="logout()">Cerrar sesión</a>
     </div>
+
     <div class="main">
-        <div id="resumen" class="section active">
-            <h2>Panel de Control</h2>
-            <canvas id="salesChart" width="400" height="150"></canvas>
-        </div>
-        <div id="inventario" class="section">
+        <div id="inventario">
+
             <h2>Inventario Mercado Libre</h2>
-            <a href="https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=2347232636874610&redirect_uri=https://marrokingcshop-api.onrender.com/auth/callback" target="_blank" class="btn-meli">🔗 Vincular Mercado Libre</a>
-            <button class="btn-sync" onclick="syncML()">🔄 Sincronizar Stock ML</button>
-            
-            <div class="search-container">
-                <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="🔍 Buscar por nombre de producto..." class="search-input">
+
+            <button class="btn btn-sync" onclick="syncML()">🔄 Sincronizar</button>
+
+            <input id="searchInput" class="search-input" placeholder="Buscar producto..." onkeyup="applyFilters()">
+
+            <div>
+                <button class="btn" onclick="setStatusFilter('all')">Todas</button>
+                <button class="btn" onclick="setStatusFilter('active')">Activas</button>
+                <button class="btn" onclick="setStatusFilter('paused')">Pausadas/Cerradas</button>
+                <button class="btn" onclick="setStatusFilter('nostock')">Sin stock</button>
             </div>
 
             <table>
                 <thead>
-                    <tr><th>Producto</th><th>Precio</th><th>Stock</th><th>ML ID</th></tr>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>ML ID</th>
+                    </tr>
                 </thead>
                 <tbody id="productTable"></tbody>
             </table>
+
         </div>
     </div>
 </div>
 
 <script>
-    const API = "https://marrokingcshop-api.onrender.com";
-    let allProducts = []; // Para el buscador
+const API = "https://marrokingcshop-api.onrender.com";
 
-    function showSection(id) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id === 'inventario') loadProducts();
-    }
+let allProducts = [];
+let currentStatusFilter = "all";
 
-    async function login() {
-        const u = document.getElementById("username").value;
-        const p = document.getElementById("password").value;
-        const resp = await fetch(`${API}/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: u, password: p})
-        });
-        if(resp.ok) {
-            const data = await resp.json();
-            localStorage.setItem("token", data.access_token);
-            document.getElementById("loginScreen").style.display = "none";
-            document.getElementById("dashboardLayout").style.display = "flex";
-        } else {
-            alert("Acceso Denegado");
-        }
-    }
+// LOGIN
+async function login(){
+    const resp = await fetch(API + "/login", {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+            username: username.value,
+            password: password.value
+        })
+    });
 
-    async function loadProducts() {
-    try {
-        const resp = await fetch(`${API}/products-grouped`);
+    if(resp.ok){
         const data = await resp.json();
-
-        // Guardamos agrupado
-        allProducts = data.products;
-
-        renderTable(allProducts);
-
-    } catch (e) {
-        console.error("Error cargando productos:", e);
+        localStorage.setItem("token", data.access_token);
+        loginScreen.style.display = "none";
+        dashboardLayout.style.display = "flex";
+        loadProducts();
+    } else {
+        alert("Credenciales incorrectas");
     }
 }
 
-function renderTable(productsList) {
+// CARGAR PRODUCTOS
+async function loadProducts(){
+    const resp = await fetch(API + "/products-grouped");
+    const data = await resp.json();
+    allProducts = data.products || [];
+    applyFilters();
+}
+
+// FILTROS
+function setStatusFilter(status){
+    currentStatusFilter = status;
+    applyFilters();
+}
+
+function applyFilters(){
+    let filtered = [...allProducts];
+    const text = searchInput.value.toLowerCase();
+
+    // Filtro estado
+    if(currentStatusFilter === "active"){
+        filtered = filtered.filter(p => p.status === "active");
+    }
+
+    if(currentStatusFilter === "paused"){
+        filtered = filtered.filter(p => p.status === "paused" || p.status === "closed");
+    }
+
+    if(currentStatusFilter === "nostock"){
+        filtered = filtered.filter(p => {
+            let total = 0;
+            (p.variations || []).forEach(v => total += v.stock);
+            return total === 0;
+        });
+    }
+
+    // Filtro texto
+    if(text){
+        filtered = filtered.filter(p =>
+            p.title.toLowerCase().includes(text) ||
+            (p.variations || []).some(v => v.name.toLowerCase().includes(text))
+        );
+    }
+
+    renderTable(filtered);
+}
+
+// TABLA
+function renderTable(productsList){
     const table = document.getElementById("productTable");
     table.innerHTML = "";
 
+    // Orden A-Z
+    productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
+
     productsList.forEach(item => {
 
-        // Calcular stock total
         let totalStock = 0;
-(item.variations || []).forEach(v => totalStock += v.stock);
+        (item.variations || []).forEach(v => totalStock += v.stock);
 
-        // Estado
-        const status = String(item.status || '').toLowerCase();
+        const status = (item.status || "").toLowerCase();
         let rowStyle = "";
-        let stockStyle = "color:#28a745; font-weight:bold;";
+        let stockStyle = "color:green;font-weight:bold;";
         let statusLabel = "";
 
-        // Producto pausado o no activo
-        if (status !== "active" && status !== "") {
-            rowStyle = "background:#f2f2f2; opacity:0.6;";
-            stockStyle = "color:#999;";
-            statusLabel = `<br><span style="color:#d9534f; font-size:12px;">(PAUSADA EN ML: ${status.toUpperCase()})</span>`;
+        if(status !== "active" && status !== ""){
+            rowStyle = "background:#f2f2f2;opacity:0.6;";
+            statusLabel = `<div style="color:red;font-size:12px;">(${status.toUpperCase()})</div>`;
         }
 
-        // Sin stock
-        if (totalStock === 0) {
-            stockStyle = "color:#dc3545; font-weight:bold; background:#f8d7da; padding:3px 6px; border-radius:4px;";
+        if(totalStock === 0){
+            stockStyle = "color:red;font-weight:bold;";
         }
 
-        // Fila principal (producto)
         table.innerHTML += `
             <tr style="${rowStyle}">
-                <td>
-                    <div style="font-weight:600;">${item.title}</div>
-                    ${statusLabel}
-                </td>
+                <td><b>${item.title}</b>${statusLabel}</td>
                 <td>$${item.variations[0]?.price || 0}</td>
                 <td style="${stockStyle}">${totalStock}</td>
-                <td style="font-family:monospace; font-size:12px;">
-                    ${item.meli_item_id}
-                </td>
+                <td>${item.meli_item_id}</td>
             </tr>
         `;
 
-        // Subfilas (tallas / variaciones)
         (item.variations || []).forEach(v => {
-
-            let vStockStyle = "color:#28a745;";
-            if (v.stock === 0) {
-                vStockStyle = "color:#dc3545; font-weight:bold;";
-            }
-
             table.innerHTML += `
                 <tr style="${rowStyle}">
-                    <td style="padding-left:30px; color:#555;">
-                        └ ${v.name}
-                    </td>
+                    <td style="padding-left:30px;">└ ${v.name}</td>
                     <td></td>
-                    <td style="${vStockStyle}">${v.stock}</td>
-                    <td style="font-family:monospace; font-size:11px; color:#777;">
-                        ${v.meli_id}
-                    </td>
+                    <td>${v.stock}</td>
+                    <td style="font-size:11px;">${v.meli_id}</td>
                 </tr>
             `;
         });
@@ -179,52 +203,27 @@ function renderTable(productsList) {
     });
 }
 
-    function filterProducts() {
-    const text = document.getElementById("searchInput").value.toLowerCase();
-
-    const filtered = allProducts.filter(item => {
-        // Buscar en título
-        if (item.title.toLowerCase().includes(text)) return true;
-
-        // Buscar en variaciones
-        return item.variations.some(v => 
-            v.name.toLowerCase().includes(text)
-        );
+// SINCRONIZAR
+async function syncML(){
+    const resp = await fetch(API + "/meli/sync", {
+        method:"POST",
+        headers:{ "Authorization": "Bearer " + localStorage.getItem("token") }
     });
 
-    renderTable(filtered);
+    if(resp.ok){
+        alert("Sincronizado correctamente");
+        loadProducts();
+    } else {
+        alert("Error al sincronizar");
+    }
 }
 
-    async function syncML() {
-        const btn = document.querySelector(".btn-sync");
-        btn.innerText = "⏳ Sincronizando...";
-        try {
-            const resp = await fetch(`${API}/meli/sync`, {
-                method: 'POST',
-                headers: {'Authorization': `Bearer ${localStorage.getItem("token")}`}
-            });
-            if(resp.ok) {
-                alert("Sincronización Exitosa");
-                loadProducts();
-            }
-        } catch(e) { alert("Error en sincronización"); }
-        btn.innerText = "🔄 Sincronizar Stock ML";
-    }
-
-    async function deleteProduct(id) {
-        if (!confirm("¿Eliminar este registro?")) return;
-        const resp = await fetch(`${API}/products/${id}`, {
-            method: 'DELETE',
-            headers: {'Authorization': `Bearer ${localStorage.getItem("token")}`}
-        });
-        if(resp.ok) loadProducts();
-        else alert("Error al eliminar");
-    }
-
-    function logout() {
-        localStorage.clear();
-        location.reload();
-    }
+// LOGOUT
+function logout(){
+    localStorage.clear();
+    location.reload();
+}
 </script>
+
 </body>
 </html>
