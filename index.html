@@ -43,13 +43,12 @@
 <div class="layout" id="dashboardLayout">
     <div class="sidebar">
         <h3 style="color:#d4af37;">MENÚ</h3>
-        <a onclick="showSection('inventario')">Inventario ML</a>
+        <a onclick="loadProducts()">Inventario ML</a>
         <a onclick="logout()">Cerrar sesión</a>
     </div>
 
     <div class="main">
         <div id="inventario">
-
             <h2>Inventario Mercado Libre</h2>
 
             <button class="btn btn-sync" onclick="syncML()">🔄 Sincronizar</button>
@@ -74,7 +73,6 @@
                 </thead>
                 <tbody id="productTable"></tbody>
             </table>
-
         </div>
     </div>
 </div>
@@ -85,29 +83,43 @@ const API = "https://marrokingcshop-api.onrender.com";
 let allProducts = [];
 let currentStatusFilter = "all";
 
-// LOGIN
+// ===== AUTO LOGIN =====
+window.onload = function(){
+    const token = localStorage.getItem("token");
+
+    if(token){
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("dashboardLayout").style.display = "flex";
+        loadProducts();
+    }
+};
+
+// ===== LOGIN =====
 window.login = async function () {
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+
     const resp = await fetch(API + "/login", {
-        method:"POST",
-        headers: {"Content-Type":"application/json"},
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            username: username.value,
-            password: password.value
+            username: usernameInput.value,
+            password: passwordInput.value
         })
     });
 
-    if(resp.ok){
-        const data = await resp.json();
-        localStorage.setItem("token", data.access_token);
-        loginScreen.style.display = "none";
-        dashboardLayout.style.display = "flex";
-        loadProducts();
-    } else {
-        alert("Credenciales incorrectas");
-    }
-}
+    const data = await resp.json();
+    console.log("LOGIN:", data);
 
-// CARGAR PRODUCTOS
+    if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        location.reload();
+    } else {
+        alert("Credenciales inválidas");
+    }
+};
+
+// ===== CARGAR PRODUCTOS =====
 async function loadProducts(){
     const resp = await fetch(API + "/products-grouped", {
         headers:{
@@ -116,16 +128,23 @@ async function loadProducts(){
     });
 
     const data = await resp.json();
-    console.log("PRODUCTS:", data); // 👈 debug útil
+    console.log("PRODUCTS:", data);
     allProducts = data.products || [];
     applyFilters();
 }
 
-function applyFilters(){
-    let filtered = [...allProducts];
-    const text = searchInput.value.toLowerCase();
+// ===== FILTROS =====
+function setStatusFilter(status){
+    currentStatusFilter = status;
+    applyFilters();
+}
 
-    // Filtro estado
+function applyFilters(){
+    const searchInput = document.getElementById("searchInput");
+    const text = (searchInput.value || "").toLowerCase();
+
+    let filtered = [...allProducts];
+
     if(currentStatusFilter === "active"){
         filtered = filtered.filter(p => p.status === "active");
     }
@@ -142,24 +161,23 @@ function applyFilters(){
         });
     }
 
-  // Filtro texto
-if(text){
-    filtered = filtered.filter(p =>
-        (p.title || "").toLowerCase().includes(text) ||
-        (p.variations || []).some(v =>
-            (v.name || "").toLowerCase().includes(text)
-        )
-    );
+    if(text){
+        filtered = filtered.filter(p =>
+            (p.title || "").toLowerCase().includes(text) ||
+            (p.variations || []).some(v =>
+                (v.name || "").toLowerCase().includes(text)
+            )
+        );
+    }
+
+    renderTable(filtered);
 }
 
-renderTable(filtered);
-
-// TABLA
+// ===== TABLA =====
 function renderTable(productsList){
     const table = document.getElementById("productTable");
     table.innerHTML = "";
 
-    // Orden A-Z
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
     productsList.forEach(item => {
@@ -172,7 +190,7 @@ function renderTable(productsList){
         let stockStyle = "color:green;font-weight:bold;";
         let statusLabel = "";
 
-        if(status !== "active" && status !== ""){
+        if(status && status !== "active"){
             rowStyle = "background:#f2f2f2;opacity:0.6;";
             statusLabel = `<div style="color:red;font-size:12px;">(${status.toUpperCase()})</div>`;
         }
@@ -184,9 +202,9 @@ function renderTable(productsList){
         table.innerHTML += `
             <tr style="${rowStyle}">
                 <td><b>${item.title}</b>${statusLabel}</td>
-                <td>$${item.variations[0]?.price || 0}</td>
+                <td>$${item.variations?.[0]?.price || 0}</td>
                 <td style="${stockStyle}">${totalStock}</td>
-                <td>${item.meli_item_id}</td>
+                <td>${item.meli_item_id || ""}</td>
             </tr>
         `;
 
@@ -204,7 +222,7 @@ function renderTable(productsList){
     });
 }
 
-// SINCRONIZAR
+// ===== SINCRONIZAR =====
 async function syncML(){
     const resp = await fetch(API + "/meli/sync", {
         method:"POST",
@@ -219,7 +237,7 @@ async function syncML(){
     }
 }
 
-// LOGOUT
+// ===== LOGOUT =====
 function logout(){
     localStorage.clear();
     location.reload();
@@ -227,4 +245,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+</html> 
