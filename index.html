@@ -138,7 +138,7 @@ async function loadProducts(){
     }
 }
 
-// ===== FILTROS (EL CORAZÓN DEL CAMBIO) =====
+// ===== FILTROS (REVISADO PARA QUITAR STOCK 0 DE ACTIVAS) =====
 function setStatusFilter(status){
     currentStatusFilter = status;
     applyFilters();
@@ -150,24 +150,29 @@ function applyFilters(){
 
     let filtered = [...allProducts];
 
-    // FILTRO DE ESTADO ESTRICTO
+    // FILTRO DE ESTADO INTELIGENTE
     if(currentStatusFilter === "active"){
-        // SOLO lo que MELI diga que es active
-        filtered = filtered.filter(p => p.status === "active");
+        // SOLO lo que sea 'active' Y tenga stock mayor a 0
+        filtered = filtered.filter(p => {
+            let total = 0;
+            (p.variations || []).forEach(v => total += v.stock);
+            return p.status === "active" && total > 0;
+        });
     } 
     else if(currentStatusFilter === "paused"){
-        // Todo lo que NO sea active se va a esta pestaña
+        // Todo lo que NO sea active (pausadas, cerradas, etc.)
         filtered = filtered.filter(p => p.status !== "active");
     } 
     else if(currentStatusFilter === "nostock"){
+        // TODO lo que tenga stock 0, sin importar si MELI dice que está activa o no
         filtered = filtered.filter(p => {
             let total = 0;
             (p.variations || []).forEach(v => total += v.stock);
             return total === 0;
         });
     }
-
-    // FILTRO DE BÚSQUEDA
+    
+    // Filtro de texto (esto se queda igual abajo)
     if(text){
         filtered = filtered.filter(p =>
             (p.title || "").toLowerCase().includes(text) ||
