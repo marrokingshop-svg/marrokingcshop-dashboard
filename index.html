@@ -143,17 +143,20 @@ function applyFilters(){
     const searchInput = document.getElementById("searchInput");
     const text = (searchInput.value || "").toLowerCase();
 
+    // 1. Empezamos siempre con todos los productos
     let filtered = [...allProducts];
 
+    // 2. Aplicamos UN SOLO filtro de estado a la vez
     if(currentStatusFilter === "active"){
+        // Solo lo que sea estrictamente active
         filtered = filtered.filter(p => p.status === "active");
-    }
-
-    if(currentStatusFilter === "paused"){
-        filtered = filtered.filter(p => p.status === "paused" || p.status === "closed");
-    }
-
-    if(currentStatusFilter === "nostock"){
+    } 
+    else if(currentStatusFilter === "paused"){
+        // Atrapamos todo lo que NO sea venta inmediata
+        const pausedStates = ["paused", "closed", "under_review", "inactive"];
+        filtered = filtered.filter(p => pausedStates.includes(p.status));
+    } 
+    else if(currentStatusFilter === "nostock"){
         filtered = filtered.filter(p => {
             let total = 0;
             (p.variations || []).forEach(v => total += v.stock);
@@ -161,6 +164,7 @@ function applyFilters(){
         });
     }
 
+    // 3. Al final, sobre lo que ya filtramos por estado, filtramos por texto
     if(text){
         filtered = filtered.filter(p =>
             (p.title || "").toLowerCase().includes(text) ||
