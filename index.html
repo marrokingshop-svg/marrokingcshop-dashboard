@@ -97,15 +97,31 @@
     }
 
     async function loadProducts() {
-        try {
-            const resp = await fetch(`${API}/products`);
-            const data = await resp.json();
-            allProducts = data.products; // Guardamos copia
-            renderTable(allProducts);
-        } catch (e) { 
-            console.error("Error cargando productos:", e); 
-        }
+    try {
+        const resp = await fetch(`${API}/products-grouped`);
+        const data = await resp.json();
+
+        // Convertimos agrupados a lista normal
+        let flat = [];
+        data.products.forEach(item => {
+            item.variations.forEach(v => {
+                flat.push({
+                    name: v.name,
+                    price: v.price,
+                    stock: v.stock,
+                    meli_id: v.meli_id,
+                    status: item.status
+                });
+            });
+        });
+
+        allProducts = flat;
+        renderTable(allProducts);
+
+    } catch (e) {
+        console.error("Error cargando productos:", e);
     }
+}
 
 function renderTable(productsList) {
         const table = document.getElementById("productTable");
