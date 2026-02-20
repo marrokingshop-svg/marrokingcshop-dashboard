@@ -101,21 +101,9 @@
         const resp = await fetch(`${API}/products-grouped`);
         const data = await resp.json();
 
-        // Convertimos agrupados a lista normal
-        let flat = [];
-        data.products.forEach(item => {
-            item.variations.forEach(v => {
-                flat.push({
-                    name: v.name,
-                    price: v.price,
-                    stock: v.stock,
-                    meli_id: v.meli_id,
-                    status: item.status
-                });
-            });
-        });
+        // Guardamos agrupado
+        allProducts = data.products;
 
-        allProducts = flat;
         renderTable(allProducts);
 
     } catch (e) {
@@ -124,62 +112,88 @@
 }
 
 function renderTable(productsList) {
-        const table = document.getElementById("productTable");
-        table.innerHTML = "";
+    const table = document.getElementById("productTable");
+    table.innerHTML = "";
 
-        // 1. Ordenamiento Robusto: Forzamos minúsculas para comparar correctamente
-        const sorted = [...productsList].sort((a, b) => {
-            const statusA = String(a.status || '').toLowerCase();
-            const statusB = String(b.status || '').toLowerCase();
-            
-            if (statusA === 'active' && statusB !== 'active') return -1;
-            if (statusA !== 'active' && statusB === 'active') return 1;
-            return 0;
-        });
+    productsList.forEach(item => {
 
-        sorted.forEach(p => {
-            // Filtro Maestro: Ignora registros sin ID real de Mercado Libre
-            if (!p.meli_id || p.meli_id === 'null') return;
+        // Calcular stock total
+        let totalStock = 0;
+(item.variations || []).forEach(v => totalStock += v.stock);
 
-            let stockStyle = "color: #28a745; font-weight: bold;";
-            let rowStyle = "";
-            let statusLabel = "";
-            
-            // Convertimos a minúsculas para la lógica visual
-            const currentStatus = String(p.status || '').toLowerCase();
+        // Estado
+        const status = String(item.status || '').toLowerCase();
+        let rowStyle = "";
+        let stockStyle = "color:#28a745; font-weight:bold;";
+        let statusLabel = "";
 
-            // 2. Lógica para productos NO ACTIVOS (Pausados, bajo revisión, etc.)
-            if (currentStatus !== 'active' && currentStatus !== '') {
-                rowStyle = "background-color: #f2f2f2; opacity: 0.6;";
-                stockStyle = "color: #999; font-weight: normal;";
-                statusLabel = `<br><span style="color: #d9534f; font-size: 0.75em; font-weight: bold;">(PAUSADA EN ML: ${currentStatus.toUpperCase()})</span>`;
-            } 
-            // 3. Lógica para productos sin stock pero activos
-            else if (parseInt(p.stock) === 0) {
-                stockStyle = "color: #dc3545; font-weight: bold; background-color: #f8d7da; padding: 2px 5px; border-radius: 4px;";
+        // Producto pausado o no activo
+        if (status !== "active" && status !== "") {
+            rowStyle = "background:#f2f2f2; opacity:0.6;";
+            stockStyle = "color:#999;";
+            statusLabel = `<br><span style="color:#d9534f; font-size:12px;">(PAUSADA EN ML: ${status.toUpperCase()})</span>`;
+        }
+
+        // Sin stock
+        if (totalStock === 0) {
+            stockStyle = "color:#dc3545; font-weight:bold; background:#f8d7da; padding:3px 6px; border-radius:4px;";
+        }
+
+        // Fila principal (producto)
+        table.innerHTML += `
+            <tr style="${rowStyle}">
+                <td>
+                    <div style="font-weight:600;">${item.title}</div>
+                    ${statusLabel}
+                </td>
+                <td>$${item.variations[0]?.price || 0}</td>
+                <td style="${stockStyle}">${totalStock}</td>
+                <td style="font-family:monospace; font-size:12px;">
+                    ${item.meli_item_id}
+                </td>
+            </tr>
+        `;
+
+        // Subfilas (tallas / variaciones)
+        (item.variations || []).forEach(v => {
+
+            let vStockStyle = "color:#28a745;";
+            if (v.stock === 0) {
+                vStockStyle = "color:#dc3545; font-weight:bold;";
             }
 
             table.innerHTML += `
                 <tr style="${rowStyle}">
-                    <td>
-                        <div style="font-weight: 500;">${p.name}</div>
-                        ${statusLabel}
+                    <td style="padding-left:30px; color:#555;">
+                        └ ${v.name}
                     </td>
-                    <td>$${p.price}</td>
-                    <td style="${stockStyle}">${p.stock}</td>
-                    <td style="font-family: monospace; color: #666; font-size: 0.85em;">
-                        ${p.meli_id}
-                        <button onclick="deleteProduct(${p.id})" style="margin-left: 10px; color: red; cursor: pointer; border: none; background: none; font-size: 1.1em;">🗑️</button>
+                    <td></td>
+                    <td style="${vStockStyle}">${v.stock}</td>
+                    <td style="font-family:monospace; font-size:11px; color:#777;">
+                        ${v.meli_id}
                     </td>
-                </tr>`;
+                </tr>
+            `;
         });
-    }
+
+    });
+}
 
     function filterProducts() {
-        const text = document.getElementById("searchInput").value.toLowerCase();
-        const filtered = allProducts.filter(p => p.name.toLowerCase().includes(text));
-        renderTable(filtered);
-    }
+    const text = document.getElementById("searchInput").value.toLowerCase();
+
+    const filtered = allProducts.filter(item => {
+        // Buscar en título
+        if (item.title.toLowerCase().includes(text)) return true;
+
+        // Buscar en variaciones
+        return item.variations.some(v => 
+            v.name.toLowerCase().includes(text)
+        );
+    });
+
+    renderTable(filtered);
+}
 
     async function syncML() {
         const btn = document.querySelector(".btn-sync");
