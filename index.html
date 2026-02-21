@@ -523,6 +523,18 @@ function logout(){
     localStorage.removeItem("token");
     location.reload();
 }
+
+// ==========================================================
+// 🕒 ACTUALIZACIÓN AUTOMÁTICA VISUAL
+// ==========================================================
+setInterval(() => {
+    // Solo recargamos si el usuario está dentro (tiene token)
+    if (localStorage.getItem("token")) {
+        console.log("🔄 Actualizando inventario automáticamente...");
+        loadProducts(); 
+    }
+}, 60000); // Se ejecuta cada 60 segundos
+
 </script>
 
 </body>
