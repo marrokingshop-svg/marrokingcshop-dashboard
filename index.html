@@ -552,7 +552,7 @@ setInterval(() => {
         loadProducts(); 
         updateTimestamp();
     }
-}, 60000); // Se ejecuta cada 60 segundos
+}, 600000); // Se ejecuta cada 60 segundos
 
 // ==========================================================
 // TÚNEL EN VIVO (WEBSOCKETS) 🚇 (NUEVO)
@@ -567,13 +567,18 @@ function connectWebSocket() {
     };
 
     socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.type === "notification") {
-            // 1. Mostrar la notificación flotante
-            showLiveToast(data.message);
-            // 2. ¡MAGIA! Recargar la tabla automáticamente
-            loadProducts();
-            updateTimestamp();
+        console.log("📡 ¡Llegó algo por el túnel!", event.data); // Esto es para espiar qué llega
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === "notification") {
+                // 1. Mostrar la notificación flotante
+                showLiveToast(data.message || "Cambio en Mercado Libre");
+                // 2. Recargar la tabla
+                loadProducts();
+                updateTimestamp();
+            }
+        } catch (err) {
+            console.error("❌ Error al leer el mensaje del túnel:", err);
         }
     };
 
