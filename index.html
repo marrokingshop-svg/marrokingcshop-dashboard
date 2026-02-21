@@ -3,75 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <title>Marroking Shop - Sistema Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { margin: 0; font-family: 'Inter', sans-serif; background: #f4f6f9; }
+        :root {
+            --primary-gold: #cfa862;
+            --primary-gold-dark: #b89657;
+            --corporate-blue: #2c3e50;
+            --bg-light: #f8f9fc;
+            --text-dark: #2d3436;
+            --text-gray: #636e72;
+        }
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        
+        /* Login Screen - Más moderno */
         .login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #ffffff; }
-        .login-box { padding: 60px; border-radius: 18px; border: 1px solid rgba(212,175,55,0.25); box-shadow: 0 30px 60px rgba(0,0,0,0.06); width: 400px; text-align: center; }
-        .login-box input { width: 100%; padding: 16px; margin-bottom: 22px; border: 1px solid #e5e7eb; border-radius: 12px; }
-        .login-box button { width: 100%; padding: 16px; border: none; background: linear-gradient(90deg, #d4af37, #b8860b); color: white; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .login-box { padding: 50px; border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.08); width: 420px; text-align: center; }
+        .login-box h2 { color: var(--corporate-blue); font-weight: 700; margin-bottom: 30px; }
+        .login-box input { width: 100%; padding: 18px; margin-bottom: 20px; border: 1px solid #dfe6e9; border-radius: 12px; font-size: 16px; background: #fdfdfd; }
+        .login-box button { width: 100%; padding: 18px; border: none; background: var(--corporate-blue); color: white; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .login-box button:hover { background: #34495e; box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3); }
 
+        /* Layout Principal */
         .layout { display: none; min-height: 100vh; }
-        .sidebar { width: 250px; background: #ffffff; border-right: 1px solid rgba(212,175,55,0.25); padding: 40px 25px; position: fixed; height: 100vh; }
-        .sidebar a { display: block; padding: 12px 0; cursor: pointer; color: #333; text-decoration: none;}
-        .sidebar a:hover { color: #d4af37; }
-        .main { margin-left: 300px; padding: 50px; width: 100%;}
+        .sidebar { width: 280px; background: #ffffff; border-right: 1px solid #edf2f7; padding: 40px 30px; position: fixed; height: 100vh; box-shadow: 5px 0 15px rgba(0,0,0,0.02); }
+        .sidebar h3 { color: var(--primary-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 30px; }
+        .sidebar a { display: block; padding: 15px; margin-bottom: 10px; cursor: pointer; color: var(--text-gray); text-decoration: none; font-weight: 600; border-radius: 10px; transition: 0.2s; }
+        .sidebar a:hover, .sidebar a.active { color: var(--primary-gold); background: #fffbf4; }
+        .main { margin-left: 330px; padding: 50px; width: calc(100% - 330px); }
+        .main h2 { font-size: 28px; font-weight: 700; color: var(--corporate-blue); margin-bottom: 25px; }
 
-        table { width: 100%; background: white; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);}
-        th, td { padding: 12px; border-bottom: 1px solid #eee; }
-        th { background: #fafafa; color: #d4af37; text-align: left; }
+        /* Componentes Corporativos */
+        .search-input { width: 100%; padding: 15px 20px; margin-top: 15px; border: 1px solid #dfe6e9; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+        .btn { padding: 12px 20px; margin: 8px; cursor: pointer; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; transition: 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .btn-sync { background: var(--corporate-blue); color: white; }
+        .btn-warning { background: var(--primary-gold); color: white; }
+        .filter-btn { background: white; border: 1px solid #dfe6e9; color: var(--text-gray); }
+        .filter-btn.active { background: var(--primary-gold); color: white; border-color: var(--primary-gold); }
 
-        .search-input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .btn { padding: 8px 14px; margin: 5px; cursor: pointer; border: none; border-radius: 6px; }
-        .btn-sync { background: #3483fa; color: white; }
-        .btn-warning { background: #ffc107; color: #000; font-weight: bold; }
+        /* Tablas Profesionales */
+        table { width: 100%; border-collapse: separate; border-spacing: 0 12px; margin-top: 25px; }
+        th { padding: 15px 20px; color: var(--text-gray); font-weight: 600; text-align: left; border-bottom: 2px solid #edf2f7; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+        td { padding: 20px; background: white; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; }
+        tr:first-child td { border-top: none; }
+        tr td:first-child { border-left: 1px solid #edf2f7; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+        tr td:last-child { border-right: 1px solid #edf2f7; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+        tbody tr { box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; }
+        tbody tr:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+
+        /* Estilos específicos para la tabla de Stock */
+        .parent-row { cursor: pointer; background: white; }
+        .parent-row:hover { background: #fefefe !important; }
+        .product-thumb { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .parent-title { font-size: 18px; font-weight: 700; color: var(--corporate-blue); display: flex; align-items: center; }
+        .parent-title span { margin-left: 10px; }
+        .total-stock { font-size: 22px; font-weight: 700; color: var(--primary-gold); }
+        .total-stock small { font-size: 13px; font-weight: 400; color: var(--text-gray); display: block; }
+        .view-variants-btn { background: none; border: none; color: var(--primary-gold); font-weight: 700; cursor: pointer; font-size: 15px; display: flex; align-items: center; }
+        .view-variants-btn i { margin-left: 8px; transition: 0.3s; }
+
+        /* Tabla de Variantes (Hija) */
+        .child-container { background: #f8f9fc !important; box-shadow: inset 0 5px 15px rgba(0,0,0,0.03) !important; padding: 0 !important; }
+        .child-table { width: 100%; border-collapse: collapse; background: transparent; box-shadow: none; border-spacing: 0; margin-top: 0; }
+        .child-table td { background: transparent; border: none; border-bottom: 1px solid #e0e6ed; padding: 18px; }
+        .child-table tr:last-child td { border-bottom: none; }
+        .variant-title { font-weight: 600; color: var(--text-dark); font-size: 15px; }
+        .stock-control { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .stock-val { font-size: 20px; font-weight: 700; min-width: 40px; text-align: center; }
+        .btn-qty { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-minus { background: #ff7675; color: white; }
+        .btn-plus { background: #55efc4; color: white; }
+        .btn-qty:hover { transform: scale(1.1); }
+        .btn-save { background: var(--corporate-blue); color: white; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; max-width: 180px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-save:hover { background: var(--primary-gold); }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
 <div class="login-screen" id="loginScreen">
     <div class="login-box">
-        <h2>MARROKING SHOP</h2>
+        <h2>MARROKING SHOP PRO</h2>
         <input id="username" placeholder="Usuario">
         <input id="password" type="password" placeholder="Contraseña">
-        <button onclick="login()">ACCEDER</button>
+        <button onclick="login()">INICIAR SESIÓN</button>
     </div>
 </div>
 
 <div class="layout" id="dashboardLayout">
     <div class="sidebar">
-        <h3 style="color:#d4af37;">MENÚ</h3>
-        <a onclick="showSection('inventario')">📦 Inventario ML</a>
-        <a onclick="showSection('editarStock')">✏️ Editar Stock</a>
-        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
-        <a onclick="logout()" style="color: red;">Cerrar sesión</a>
+        <h3>MENÚ PRINCIPAL</h3>
+        <a onclick="showSection('inventario')" id="link-inventario" class="active"><i class="fas fa-box-open" style="margin-right:10px;"></i> Inventario ML</a>
+        <a onclick="showSection('editarStock')" id="link-editarStock"><i class="fas fa-edit" style="margin-right:10px;"></i> Control de Stock</a>
+        <hr style="border:0; border-top:1px solid #edf2f7; margin: 30px 0;">
+        <a onclick="logout()" style="color: #d63031;"><i class="fas fa-sign-out-alt" style="margin-right:10px;"></i> Cerrar sesión</a>
     </div>
 
     <div class="main">
         <div id="inventario">
-            <h2>Inventario Mercado Libre</h2>
+            <h2>Inventario General de Mercado Libre</h2>
 
-            <button class="btn btn-sync" onclick="syncML()">🔄 Sincronizar</button>
-            <button class="btn btn-warning" onclick="window.location.href='https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=8753239463972688&redirect_uri=https://marrokingcshop-api.onrender.com/auth/callback'">🔑 Renovar / Vincular MELI</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn btn-sync" onclick="syncML()"><i class="fas fa-sync-alt"></i> Sincronizar Ahora</button>
+                <button class="btn btn-warning" onclick="window.location.href='https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=8753239463972688&redirect_uri=https://marrokingcshop-api.onrender.com/auth/callback'"><i class="fas fa-key"></i> Vincular Cuenta MELI</button>
+            </div>
 
-            <input id="searchInput" class="search-input" placeholder="Buscar producto..." onkeyup="applyFilters()">
+            <input id="searchInput" class="search-input" placeholder="🔍 Buscar producto por nombre, ID o SKU..." onkeyup="applyFilters()">
 
-            <div style="margin-top: 15px;">
-                <button class="btn" style="background:#eee" onclick="setStatusFilter('all')">Todas</button>
-                <button class="btn" style="background:#e6f4ea; color:#137333;" onclick="setStatusFilter('active')">Activas</button>
-                <button class="btn" style="background:#fce8e6; color:#c5221f;" onclick="setStatusFilter('paused')">Pausadas/Cerradas</button>
-                <button class="btn" style="background:#fef7e0; color:#b06000;" onclick="setStatusFilter('nostock')">Sin stock</button>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn filter-btn active" onclick="setStatusFilter('all', this)">Todas</button>
+                <button class="btn filter-btn" onclick="setStatusFilter('active', this)"><i class="fas fa-check-circle" style="color:#55efc4;"></i> Activas</button>
+                <button class="btn filter-btn" onclick="setStatusFilter('paused', this)"><i class="fas fa-pause-circle" style="color:#fab1a0;"></i> Pausadas</button>
+                <button class="btn filter-btn" onclick="setStatusFilter('nostock', this)"><i class="fas fa-times-circle" style="color:#ff7675;"></i> Sin Stock</button>
             </div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>Producto</th>
+                        <th style="padding-left: 30px;">Producto</th>
                         <th>Precio</th>
                         <th>Stock</th>
-                        <th>ML ID</th>
+                        <th>ID MELI</th>
                     </tr>
                 </thead>
                 <tbody id="productTable"></tbody>
@@ -79,18 +134,18 @@
         </div>
 
         <div id="editarStock" style="display:none;">
-            <h2>Control y Edición de Stock</h2>
-            <p style="color: gray; margin-bottom: 20px;">Los cambios realizados aquí se reflejarán directamente en Mercado Libre.</p>
+            <h2>Control de Stock Corporativo</h2>
+            <p style="color: var(--text-gray); margin-bottom: 30px; font-size: 15px;">Gestione el inventario de sus publicaciones agrupadas. Los cambios se reflejan en tiempo real en Mercado Libre.</p>
 
-            <input id="searchStockInput" class="search-input" placeholder="🔍 Buscar producto por nombre o ID..." onkeyup="filterStock()">
+            <input id="searchStockInput" class="search-input" placeholder="🔍 Buscar publicación..." onkeyup="filterStock()">
 
-            <table>
+            <table style="border-spacing: 0 15px;">
                 <thead>
                     <tr>
-                        <th style="width: 60px; text-align: center;">Foto</th>
-                        <th>Producto / Talla</th>
-                        <th>ID MELI</th>
-                        <th style="text-align:center;">Stock Actual</th>
+                        <th style="width: 120px; text-align: center;">Imagen</th>
+                        <th>Publicación "Padre"</th>
+                        <th>ID General</th>
+                        <th style="text-align:center;">Inventario Total</th>
                         <th style="text-align:center;">Acciones</th>
                     </tr>
                 </thead>
@@ -107,12 +162,17 @@ const API = "https://marrokingcshop-api.onrender.com";
 
 let allProducts = [];
 let currentStatusFilter = "all";
-let searchTimeout; // Variable para que la búsqueda sea fluida
+let searchTimeout;
 
 function showSection(sectionId) {
     document.getElementById('inventario').style.display = 'none';
     document.getElementById('editarStock').style.display = 'none';
     document.getElementById(sectionId).style.display = 'block';
+
+    // Actualizar clase active en el menú
+    document.getElementById('link-inventario').classList.remove('active');
+    document.getElementById('link-editarStock').classList.remove('active');
+    document.getElementById('link-' + sectionId).classList.add('active');
 }
 
 window.onload = function(){
@@ -147,8 +207,8 @@ window.login = async function () {
 };
 
 async function loadProducts(){
-    document.getElementById("productTable").innerHTML = "<tr><td colspan='4'>Cargando datos frescos...</td></tr>";
-    document.getElementById("stockEditorTable").innerHTML = "<tr><td colspan='5'>Cargando datos frescos...</td></tr>";
+    document.getElementById("productTable").innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:var(--text-gray);'><i class='fas fa-spinner fa-spin'></i> Cargando inventario...</td></tr>";
+    document.getElementById("stockEditorTable").innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:var(--text-gray);'><i class='fas fa-spinner fa-spin'></i> Cargando publicaciones...</td></tr>";
     
     try {
         const resp = await fetch(API + "/products-grouped", {
@@ -166,8 +226,11 @@ async function loadProducts(){
     }
 }
 
-function setStatusFilter(status){
+function setStatusFilter(status, btnElement){
     currentStatusFilter = status;
+    // Actualizar estado visual de los botones de filtro
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
     applyFilters();
 }
 
@@ -193,7 +256,7 @@ function applyFilters(){
         }
 
         renderTable(filtered);
-    }, 300); // 300ms de retraso para que no se trabe al escribir
+    }, 300);
 }
 
 function renderTable(productsList){
@@ -201,24 +264,25 @@ function renderTable(productsList){
     table.innerHTML = ""; 
 
     if(productsList.length === 0) {
-        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>No se encontraron productos</td></tr>";
+        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:var(--text-gray);'><i class='fas fa-search' style='font-size:24px; margin-bottom:10px;'></i><br>No se encontraron productos</td></tr>";
         return;
     }
 
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
-    // Optimización: armar HTML en memoria para la tabla de inventario
     let htmlContent = "";
     productsList.forEach(item => {
         const status = (item.status || "").toLowerCase();
-        let rowStyle = status !== "active" ? "background:#f9f9f9; color:#666;" : "";
+        let rowStyle = status !== "active" ? "opacity: 0.6; background:#f8f9fc;" : "";
+        let stockColor = item.stock === 0 ? '#ff7675' : '#55efc4';
+        let stockIcon = item.stock === 0 ? 'times-circle' : 'check-circle';
 
         htmlContent += `
             <tr style="${rowStyle}">
-                <td><strong>${item.title}</strong></td>
-                <td>$${item.price || 0}</td>
-                <td style="font-weight:bold; color:${item.stock === 0 ? 'red' : 'green'};">${item.stock}</td>
-                <td style="font-family:monospace; font-size:12px;">${item.meli_item_id || ""}</td>
+                <td style="padding-left: 30px;"><strong>${item.title}</strong></td>
+                <td style="font-weight:600; color:var(--corporate-blue);">$${item.price || 0}</td>
+                <td style="font-weight:bold; color:${stockColor};"><i class="fas fa-${stockIcon}"></i> ${item.stock}</td>
+                <td style="font-family:monospace; font-size:12px; color:var(--text-gray);">${item.meli_item_id || ""}</td>
             </tr>
         `;
     });
@@ -226,19 +290,18 @@ function renderTable(productsList){
 }
 
 // =========================================================
-// NUEVA RENDERIZACIÓN DE TABLA AGRUPADA (ESTILO MELI) - OPTIMIZADA
+// NUEVA RENDERIZACIÓN VISUAL MEJORADA (CORPORATIVA)
 // =========================================================
 function renderStockTable(productsList) {
     const table = document.getElementById("stockEditorTable");
     
     if(productsList.length === 0) {
-        table.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>No se encontraron productos</td></tr>";
+        table.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-gray);'><i class='fas fa-box-open' style='font-size:30px; margin-bottom:15px;'></i><br>No hay publicaciones para mostrar</td></tr>";
         return;
     }
 
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
-    // 1. Agrupar productos por Publicación "Padre"
     const grouped = {};
     productsList.forEach(p => {
         let parentId = p.meli_item_id;
@@ -247,7 +310,7 @@ function renderStockTable(productsList) {
         }
 
         if (!grouped[parentId]) {
-            let mainTitle = p.title.split("(")[0].trim(); // Título general sin la talla
+            let mainTitle = p.title.split("(")[0].trim();
             grouped[parentId] = {
                 parentId: parentId,
                 title: mainTitle,
@@ -260,51 +323,60 @@ function renderStockTable(productsList) {
         grouped[parentId].totalStock += (p.stock || 0);
     });
 
-    // 2. Variable para almacenar todo el HTML en memoria antes de inyectarlo (EVITA QUE SE TRABE)
     let finalHTML = "";
 
-    // 3. Dibujar las filas padre y sus variantes hijas
     for (let parentId in grouped) {
         const group = grouped[parentId];
-        let photo = group.thumbnail ? `<img src="${group.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; border: 1px solid #ccc;">` : "📷";
+        let photo = group.thumbnail ? `<img src="${group.thumbnail}" class="product-thumb">` : "<div class='product-thumb' style='display:flex;align-items:center;justify-content:center;background:#eee;color:#aaa;'><i class='fas fa-camera fa-2x'></i></div>";
 
-        // --- FILA PRINCIPAL (PADRE) ---
+        // --- FILA PADRE (DISEÑO MEJORADO) ---
         finalHTML += `
-            <tr style="background-color: #f8f9fa; cursor: pointer; border-bottom: 2px solid #dee2e6; transition: 0.2s;" onclick="toggleVariations('${parentId}')" onmouseover="this.style.background='#f1f3f5'" onmouseout="this.style.background='#f8f9fa'">
-                <td style="text-align:center;">${photo}</td>
-                <td style="font-weight:bold; color: #333; font-size: 1.05em; padding: 15px;">📁 ${group.title}</td>
-                <td style="font-family:monospace; font-size:12px; color:gray;">${parentId}</td>
-                <td style="text-align:center; font-size:18px; font-weight:bold; color:#d4af37;">
-                    ${group.totalStock} <span style="font-size:12px; font-weight:normal; color:#666; display:block;">unidades en total</span>
+            <tr class="parent-row" onclick="toggleVariations('${parentId}', this)">
+                <td style="text-align:center; padding: 15px;">${photo}</td>
+                <td>
+                    <div class="parent-title"><i class="fas fa-folder" style="color:var(--primary-gold);"></i> <span>${group.title}</span></div>
+                </td>
+                <td style="font-family:monospace; font-size:13px; color:var(--text-gray);">${parentId}</td>
+                <td style="text-align:center;">
+                    <div class="total-stock">
+                        ${group.totalStock}
+                        <small>unidades</small>
+                    </div>
                 </td>
                 <td style="text-align:center;">
-                    <button style="background:none; border:none; color:#3483fa; font-weight:bold; cursor:pointer; font-size:14px;">
-                        Ver ${group.variations.length} variantes ▼
+                    <button class="view-variants-btn">
+                        Ver ${group.variations.length} variantes <i class="fas fa-chevron-down"></i>
                     </button>
                 </td>
             </tr>
         `;
 
-        // --- FILA OCULTA CON LAS VARIANTES (HIJAS) ---
+        // --- FILA HIJA (DISEÑO LIMPIO Y MODERNO) ---
         let childRows = `<tr id="vars-${parentId}" style="display:none;">
-                            <td colspan="5" style="padding:0; background:#fff;">
-                                <table style="width:100%; border-collapse:collapse; margin:0; background:#fdfdfd;">`;
+                            <td colspan="5" class="child-container">
+                                <table class="child-table">`;
         
         group.variations.forEach(v => {
-            let varDetail = v.title.includes("(") ? v.title.substring(v.title.indexOf("(")) : "(Único)";
+            let varDetail = v.title.includes("(") ? v.title.substring(v.title.indexOf("(")) : "(Versión Única)";
             
             childRows += `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="width:50px; text-align:right; color:#bbb;">↳</td>
-                    <td style="padding:15px; color:#555; font-weight:600;">${varDetail}</td>
-                    <td style="font-family:monospace; font-size:12px; color:#888;">${v.meli_item_id}</td>
-                    <td style="text-align:center; font-size:18px; font-weight:bold;">
-                        <span id="stock-val-${v.meli_item_id}">${v.stock}</span>
+                <tr>
+                    <td style="width:60px; text-align:center; color:#ccc;"><i class="fas fa-level-up-alt fa-rotate-90"></i></td>
+                    <td>
+                        <div class="variant-title">${varDetail}</div>
+                        <div style="font-family:monospace; font-size:11px; color:#aaa; margin-top:5px;">${v.meli_item_id}</div>
                     </td>
-                    <td style="text-align:center; padding:10px;">
-                        <button onclick="changeStock('${v.meli_item_id}', -1)" style="padding:6px 14px; font-size:16px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer;">-</button>
-                        <button onclick="changeStock('${v.meli_item_id}', 1)" style="padding:6px 14px; font-size:16px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:15px;">+</button>
-                        <button onclick="saveStockToMeli('${v.meli_item_id}')" style="padding:8px 15px; background:#3483fa; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; width:150px;">💾 Guardar</button>
+                    <td></td> <td>
+                        <div class="stock-control">
+                            <button class="btn-qty btn-minus" onclick="changeStock('${v.meli_item_id}', -1)"><i class="fas fa-minus"></i></button>
+                            <span id="stock-val-${v.meli_item_id}" class="stock-val">${v.stock}</span>
+                            <button class="btn-qty btn-plus" onclick="changeStock('${v.meli_item_id}', 1)"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">
+                        <button class="btn-save" onclick="saveStockToMeli('${v.meli_item_id}')">
+                            <i class="fas fa-cloud-upload-alt" style="margin-right:8px;"></i> Guardar Stock
+                        </button>
                     </td>
                 </tr>
             `;
@@ -313,17 +385,24 @@ function renderStockTable(productsList) {
         finalHTML += childRows;
     }
 
-    // 4. Inyectar todo al HTML en un solo movimiento (ESTO EVITA QUE SE TRABE)
     table.innerHTML = finalHTML;
 }
 
-// Función para abrir y cerrar las variantes
-function toggleVariations(parentId) {
+// Función para abrir y cerrar las variantes con animación de icono
+function toggleVariations(parentId, rowElement) {
     const row = document.getElementById(`vars-${parentId}`);
+    const icon = rowElement.querySelector('.view-variants-btn i');
+    
     if (row.style.display === "none") {
         row.style.display = "table-row";
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        rowElement.style.background = "#f1f3f5";
     } else {
         row.style.display = "none";
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+        rowElement.style.background = "white";
     }
 }
 
@@ -340,11 +419,11 @@ async function saveStockToMeli(id) {
     let newStock = parseInt(span.innerText);
     let token = localStorage.getItem("token");
 
-    let btn = event.target;
-    let originalText = btn.innerText;
-    btn.innerText = "⏳ Guardando...";
+    let btn = event.target.closest('button');
+    let originalHTML = btn.innerHTML;
+    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Guardando...";
     btn.disabled = true;
-    btn.style.background = "#ccc";
+    btn.style.background = "#b2bec3";
 
     try {
         let response = await fetch(`${API}/meli/update_stock/${id}`, {
@@ -357,22 +436,21 @@ async function saveStockToMeli(id) {
         });
 
         if (response.ok) {
-            alert("✅ ¡Stock actualizado en Mercado Libre!");
+            // Usamos un toast o alerta más bonita si pudieras, por ahora alerta nativa
+            alert("✅ Stock actualizado correctamente en Mercado Libre.");
             let prod = allProducts.find(p => p.meli_item_id === id);
             if(prod) prod.stock = newStock;
-            
-            // Recargamos silenciosamente los datos para actualizar el "Stock Total" del padre
             loadProducts();
         } else {
             let errData = await response.json();
-            alert("❌ Error de MELI: " + (errData.detail || "Error desconocido"));
+            alert("⚠️ Mercado Libre reportó un problema: " + (errData.detail || "Error desconocido"));
         }
     } catch (error) {
-        alert("❌ Error de conexión");
+        alert("❌ No se pudo conectar con el servidor.");
     } finally {
-        btn.innerText = originalText;
+        btn.innerHTML = originalHTML;
         btn.disabled = false;
-        btn.style.background = "#3483fa";
+        btn.style.background = "var(--corporate-blue)";
     }
 }
 
@@ -390,8 +468,8 @@ function filterStock() {
 
 async function syncML(){
     const btn = document.querySelector(".btn-sync");
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "⌛ Sincronizando...";
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Sincronizando...";
     btn.disabled = true;
 
     try {
@@ -401,22 +479,24 @@ async function syncML(){
         });
 
         if(resp.ok){
-            alert("¡Sincronización Exitosa! Datos actualizados.");
+            alert("✅ Sincronización completada con éxito.");
             await loadProducts();
         } else {
-            alert("Error en el servidor al sincronizar");
+            alert("❌ Hubo un problema al sincronizar con el servidor.");
         }
     } catch (e) {
-        alert("Error de conexión");
+        alert("❌ Error de conexión.");
     } finally {
-        btn.innerHTML = originalText;
+        btn.innerHTML = originalHTML;
         btn.disabled = false;
     }
 }
 
 function logout(){
-    localStorage.clear();
-    location.reload();
+    if(confirm("¿Estás seguro de que deseas cerrar sesión?")){
+        localStorage.clear();
+        location.reload();
+    }
 }
 </script>
 
