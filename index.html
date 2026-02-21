@@ -500,6 +500,23 @@ function connectWebSocket() {
 }
 
 function showLiveToast(message) {
+    // 🔔 BLOQUE DE SONIDO: Genera un "beep" pro
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.type = 'sine'; // Tono suave
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Nota La (aguda)
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // Volumen suave
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2); // Dura solo 0.2 segundos
+    } catch (e) {
+        console.log("No se pudo reproducir el sonido (esperando interacción del usuario)");
+    }
+
+    // 🎨 BLOQUE VISUAL (El que ya tenías)
     const toast = document.getElementById("live-toast");
     const msgSpan = document.getElementById("toast-message");
     
@@ -513,7 +530,9 @@ function showLiveToast(message) {
 
         setTimeout(() => {
             toast.style.opacity = "0";
-            setTimeout(() => { toast.style.display = "none"; }, 500);
+            setTimeout(() => { 
+                toast.style.display = "none"; 
+            }, 500);
         }, 6000);
     } else {
         console.error("❌ No encontré 'live-toast' en el HTML");
