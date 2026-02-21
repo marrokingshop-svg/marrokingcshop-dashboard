@@ -567,18 +567,22 @@ function connectWebSocket() {
     };
 
     socket.onmessage = function(event) {
-        console.log("📡 ¡Llegó algo por el túnel!", event.data); // Esto es para espiar qué llega
+        // 🔍 ESTA LÍNEA ES CLAVE: Veremos en la consola qué manda el servidor
+        console.log("📡 Datos recibidos por el túnel:", event.data);
+
         try {
             const data = JSON.parse(event.data);
+            
             if (data.type === "notification") {
-                // 1. Mostrar la notificación flotante
+                // Usamos el campo "message" que viene de tu main.py
                 showLiveToast(data.message || "Cambio en Mercado Libre");
-                // 2. Recargar la tabla
+                
+                // Recargamos la tabla para que veas el cambio visualmente
                 loadProducts();
                 updateTimestamp();
             }
-        } catch (err) {
-            console.error("❌ Error al leer el mensaje del túnel:", err);
+        } catch (error) {
+            console.error("❌ Error al procesar el mensaje del servidor:", error);
         }
     };
 
