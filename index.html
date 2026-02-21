@@ -478,19 +478,30 @@ function connectWebSocket() {
     const wsUrl = API.replace("http://", "ws://").replace("https://", "wss://") + "/ws/notifications";
     const socket = new WebSocket(wsUrl);
 
-    socket.onopen = function() { console.log("✅ Radar en vivo conectado"); };
+    socket.onopen = function() { 
+        console.log("✅ Radar en vivo conectado"); 
+    };
 
+    // AQUÍ PEGAMOS EL BLOQUE NUEVO ⬇️
     socket.onmessage = function(event) {
         console.log("📡 Datos recibidos:", event.data);
         try {
             const data = JSON.parse(event.data);
             if (data.type === "notification") {
-                // LLAMADA A LA ALERTA VERDE
+                // 1. La alerta y el sonido salen de inmediato ⚡
                 showLiveToast(data.message || "Actualización detectada");
-                loadProducts();
-                updateTimestamp();
+                
+                // 2. Esperamos 7 segundos para que el servidor termine de procesar
+                // y Mercado Libre suelte el dato nuevo.
+                setTimeout(() => {
+                    console.log("🔄 Recargando datos actualizados...");
+                    loadProducts();
+                    updateTimestamp();
+                }, 7000); 
             }
-        } catch (e) { console.error("Error en túnel:", e); }
+        } catch (e) { 
+            console.error("Error en túnel:", e); 
+        }
     };
 
     socket.onclose = function() {
