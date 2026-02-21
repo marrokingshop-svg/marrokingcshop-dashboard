@@ -25,6 +25,7 @@
         .search-input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         .btn { padding: 8px 14px; margin: 5px; cursor: pointer; border: none; border-radius: 6px; }
         .btn-sync { background: #3483fa; color: white; }
+        .btn-warning { background: #ffc107; color: #000; font-weight: bold; }
     </style>
 </head>
 
@@ -53,6 +54,7 @@
             <h2>Inventario Mercado Libre</h2>
 
             <button class="btn btn-sync" onclick="syncML()">🔄 Sincronizar</button>
+            <button class="btn btn-warning" onclick="window.location.href='https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=8753239463972688&redirect_uri=https://marrokingcshop-api.onrender.com/auth/callback'">🔑 Renovar / Vincular MELI</button>
 
             <input id="searchInput" class="search-input" placeholder="Buscar producto..." onkeyup="applyFilters()">
 
