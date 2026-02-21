@@ -106,14 +106,12 @@ const API = "https://marrokingcshop-api.onrender.com";
 let allProducts = [];
 let currentStatusFilter = "all";
 
-// ===== NAVEGACIÓN ENTRE PANTALLAS =====
 function showSection(sectionId) {
     document.getElementById('inventario').style.display = 'none';
     document.getElementById('editarStock').style.display = 'none';
     document.getElementById(sectionId).style.display = 'block';
 }
 
-// ===== AUTO LOGIN =====
 window.onload = function(){
     const token = localStorage.getItem("token");
     if(token){
@@ -123,7 +121,6 @@ window.onload = function(){
     }
 };
 
-// ===== LOGIN =====
 window.login = async function () {
     const usernameInput = document.getElementById("username");
     const passwordInput = document.getElementById("password");
@@ -146,7 +143,6 @@ window.login = async function () {
     }
 };
 
-// ===== CARGAR PRODUCTOS =====
 async function loadProducts(){
     document.getElementById("productTable").innerHTML = "<tr><td colspan='4'>Cargando datos frescos...</td></tr>";
     document.getElementById("stockEditorTable").innerHTML = "<tr><td colspan='5'>Cargando datos frescos...</td></tr>";
@@ -159,7 +155,6 @@ async function loadProducts(){
         const data = await resp.json();
         allProducts = data.products || [];
         
-        // Llenamos ambas tablas
         applyFilters(); 
         renderStockTable(allProducts); 
         
@@ -168,7 +163,6 @@ async function loadProducts(){
     }
 }
 
-// ===== FILTROS PANTALLA 1 =====
 function setStatusFilter(status){
     currentStatusFilter = status;
     applyFilters();
@@ -196,7 +190,6 @@ function applyFilters(){
     renderTable(filtered);
 }
 
-// ===== RENDERIZAR TABLA PANTALLA 1 =====
 function renderTable(productsList){
     const table = document.getElementById("productTable");
     table.innerHTML = ""; 
@@ -223,7 +216,6 @@ function renderTable(productsList){
     });
 }
 
-// ===== RENDERIZAR TABLA PANTALLA 2 (EDITAR STOCK) =====
 function renderStockTable(productsList) {
     const table = document.getElementById("stockEditorTable");
     table.innerHTML = ""; 
@@ -233,7 +225,6 @@ function renderStockTable(productsList) {
         return;
     }
 
-    // Ordenar por nombre
     productsList.sort((a,b) => (a.title || "").localeCompare(b.title || ""));
 
     productsList.forEach(item => {
@@ -257,7 +248,6 @@ function renderStockTable(productsList) {
     });
 }
 
-// ===== FUNCIONES DE EDICIÓN =====
 function changeStock(id, amount) {
     let span = document.getElementById(`stock-val-${id}`);
     let current = parseInt(span.innerText);
@@ -288,13 +278,13 @@ async function saveStockToMeli(id) {
         });
 
         if (response.ok) {
-            alert("✅ Stock actualizado en Mercado Libre!");
-            // Actualizamos la variable global
+            alert("✅ ¡Stock actualizado en Mercado Libre!");
             let prod = allProducts.find(p => p.meli_item_id === id);
             if(prod) prod.stock = newStock;
-            applyFilters(); // Para que se actualice la pantalla 1 también
+            applyFilters(); 
         } else {
-            alert("❌ Error al actualizar el stock en MELI");
+            let errData = await response.json();
+            alert("❌ Error de MELI: " + (errData.detail || "Error desconocido"));
         }
     } catch (error) {
         alert("❌ Error de conexión");
@@ -314,7 +304,6 @@ function filterStock() {
     renderStockTable(filtered);
 }
 
-// ===== SINCRONIZAR =====
 async function syncML(){
     const btn = document.querySelector(".btn-sync");
     const originalText = btn.innerHTML;
@@ -341,7 +330,6 @@ async function syncML(){
     }
 }
 
-// ===== LOGOUT =====
 function logout(){
     localStorage.clear();
     location.reload();
