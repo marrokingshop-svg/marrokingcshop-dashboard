@@ -109,9 +109,13 @@
         <div id="inventario">
             <h2>Inventario General de Mercado Libre</h2>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 5px;">
                 <button class="btn btn-sync" onclick="syncML()"><i class="fas fa-sync-alt"></i> Sincronizar Ahora</button>
                 <button class="btn btn-warning" onclick="window.location.href='https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=8753239463972688&redirect_uri=https://marrokingcshop-api.onrender.com/auth/callback'"><i class="fas fa-key"></i> Vincular Cuenta MELI</button>
+            </div>
+
+            <div style="margin-bottom: 15px; padding-left: 8px;">
+                <small id="last-update-time" style="color: #a0a0a0; font-size: 0.75rem; font-style: italic;"></small>
             </div>
 
             <input id="searchInput" class="search-input" placeholder="🔍 Buscar producto por nombre, ID o SKU..." onkeyup="applyFilters()">
@@ -183,6 +187,7 @@ window.onload = function(){
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("dashboardLayout").style.display = "flex";
         loadProducts();
+        updateTimestamp(); // Inicia el reloj al entrar
     }
 };
 
@@ -208,24 +213,20 @@ window.login = async function () {
     }
 };
 
-// ==========================================================
-// 🛡️ AQUÍ ESTÁ EL ESCUDO DE SEGURIDAD PARA CARGAR PRODUCTOS
-// ==========================================================
 async function loadProducts(){
-    document.getElementById("productTable").innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:var(--text-gray);'><i class='fas fa-spinner fa-spin'></i> Cargando inventario...</td></tr>";
-    document.getElementById("stockEditorTable").innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:var(--text-gray);'><i class='fas fa-spinner fa-spin'></i> Cargando publicaciones...</td></tr>";
-    
+    // Si no hay token, no hacemos nada
+    if(!localStorage.getItem("token")) return;
+
     try {
         const token = localStorage.getItem("token");
         const resp = await fetch(API + "/products-grouped", {
             headers:{ "Authorization": "Bearer " + token }
         });
 
-        // ESCUDO: Si no hay llave o es falsa, lo expulsa.
         if (resp.status === 401 || resp.status === 403) {
             alert("🔒 Acceso denegado o sesión expirada. Por favor, inicia sesión.");
             logout();
-            return; // Detiene todo
+            return;
         }
 
         const data = await resp.json();
@@ -235,7 +236,7 @@ async function loadProducts(){
         renderStockTable(allProducts); 
         
     } catch (error) {
-        alert("Error al conectar con el servidor");
+        console.error("Error al conectar con el servidor:", error);
     }
 }
 
@@ -303,6 +304,7 @@ function renderTable(productsList){
 
 function renderStockTable(productsList) {
     const table = document.getElementById("stockEditorTable");
+    if(!table) return;
     
     if(productsList.length === 0) {
         table.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-gray);'><i class='fas fa-box-open' style='font-size:30px; margin-bottom:15px;'></i><br>No hay publicaciones para mostrar</td></tr>";
@@ -421,9 +423,6 @@ function changeStock(id, amount) {
     span.innerText = newStock;
 }
 
-// ==========================================================
-// 🛡️ ESCUDO PARA GUARDAR STOCK
-// ==========================================================
 async function saveStockToMeli(id) {
     let span = document.getElementById(`stock-val-${id}`);
     let newStock = parseInt(span.innerText);
@@ -445,7 +444,6 @@ async function saveStockToMeli(id) {
             body: JSON.stringify({ new_stock: newStock })
         });
 
-        // ESCUDO
         if (response.status === 401 || response.status === 403) {
             alert("🔒 Sesión expirada. Por favor, inicia sesión de nuevo.");
             logout();
@@ -456,7 +454,9 @@ async function saveStockToMeli(id) {
             alert("✅ Stock actualizado correctamente en Mercado Libre.");
             let prod = allProducts.find(p => p.meli_item_id === id);
             if(prod) prod.stock = newStock;
-            loadProducts();
+            // No hacemos un loadProducts completo aquí para no perder la vista, 
+            // pero actualizamos la hora de sincronización.
+            updateTimestamp();
         } else {
             let errData = await response.json();
             alert("⚠️ Mercado Libre reportó un problema: " + (errData.detail || "Error desconocido"));
@@ -482,9 +482,6 @@ function filterStock() {
     }, 300);
 }
 
-// ==========================================================
-// 🛡️ ESCUDO PARA SINCRONIZAR
-// ==========================================================
 async function syncML(){
     const btn = document.querySelector(".btn-sync");
     const originalHTML = btn.innerHTML;
@@ -498,7 +495,6 @@ async function syncML(){
             headers:{ "Authorization": "Bearer " + token }
         });
 
-        // ESCUDO
         if (resp.status === 401 || resp.status === 403) {
             alert("🔒 Sesión expirada. Por favor, inicia sesión de nuevo.");
             logout();
@@ -508,6 +504,7 @@ async function syncML(){
         if(resp.ok){
             alert("✅ Sincronización completada con éxito.");
             await loadProducts();
+            updateTimestamp();
         } else {
             alert("❌ Hubo un problema al sincronizar con el servidor.");
         }
@@ -525,13 +522,24 @@ function logout(){
 }
 
 // ==========================================================
-// 🕒 ACTUALIZACIÓN AUTOMÁTICA VISUAL
+// 🕒 ACTUALIZACIÓN AUTOMÁTICA VISUAL CON RELOJ
 // ==========================================================
+function updateTimestamp() {
+    const ahora = new Date();
+    // Formato de hora con segundos: HH:MM:SS AM/PM
+    const horaTexto = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const elemento = document.getElementById("last-update-time");
+    if (elemento) {
+        elemento.innerHTML = "⏱️ Sincronizado automáticamente: " + horaTexto;
+    }
+}
+
 setInterval(() => {
     // Solo recargamos si el usuario está dentro (tiene token)
     if (localStorage.getItem("token")) {
         console.log("🔄 Actualizando inventario automáticamente...");
         loadProducts(); 
+        updateTimestamp();
     }
 }, 60000); // Se ejecuta cada 60 segundos
 
