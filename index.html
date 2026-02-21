@@ -501,15 +501,20 @@ async function syncML(){
             return;
         }
 
+        // Leemos la respuesta exacta que manda tu nuevo backend
+        const data = await resp.json(); 
+
         if(resp.ok){
-            alert("✅ Sincronización completada con éxito.");
+            // Ahora te dirá el número exacto de productos
+            alert(`✅ Sincronización completada. Se guardaron ${data.sincronizados} productos.`);
             await loadProducts();
             updateTimestamp();
         } else {
-            alert("❌ Hubo un problema al sincronizar con el servidor.");
+            // Si Mercado Libre rechaza, te dirá exactamente por qué
+            alert("⚠️ Mercado Libre dice:\n" + (data.detail || "Error desconocido"));
         }
     } catch (e) {
-        alert("❌ Error de conexión.");
+        alert("❌ Error de conexión con el servidor.");
     } finally {
         btn.innerHTML = originalHTML;
         btn.disabled = false;
