@@ -15,7 +15,6 @@
             --text-gray: #636e72;
         }
 
-        /* Esto asegura que los anchos de los menús sean exactos y no empujen la tabla */
         * { box-sizing: border-box; } 
 
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-dark); }
@@ -28,14 +27,13 @@
         .login-box button { width: 100%; padding: 18px; border: none; background: var(--corporate-blue); color: white; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; transition: 0.2s; }
         .login-box button:hover { background: #34495e; box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3); }
 
-        /* Layout Principal - AQUÍ HICIMOS EL MENÚ MÁS DELGADO */
+        /* Layout Principal */
         .layout { display: none; min-height: 100vh; }
         .sidebar { width: 220px; background: #ffffff; border-right: 1px solid #edf2f7; padding: 30px 15px; position: fixed; height: 100vh; box-shadow: 5px 0 15px rgba(0,0,0,0.02); }
         .sidebar h3 { color: var(--primary-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 30px; font-size: 14px; text-align: center; }
         .sidebar a { display: block; padding: 12px 15px; margin-bottom: 8px; cursor: pointer; color: var(--text-gray); text-decoration: none; font-weight: 600; border-radius: 10px; transition: 0.2s; font-size: 13px; }
         .sidebar a:hover, .sidebar a.active { color: var(--primary-gold); background: #fffbf4; }
         
-        /* Ajustamos el margen para expandir la tabla */
         .main { margin-left: 220px; padding: 40px; width: calc(100% - 220px); }
         .main h2 { font-size: 28px; font-weight: 700; color: var(--corporate-blue); margin-bottom: 25px; }
 
@@ -61,7 +59,6 @@
         /* Estilos específicos para la tabla de Stock */
         .parent-row { cursor: pointer; background: white; }
         .parent-row:hover { background: #fefefe !important; }
-        /* Redujimos la imagen un poco para ahorrar ancho de pantalla */
         .product-thumb { width: 85px; height: 85px; border-radius: 10px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
         .parent-title { font-size: 16px; font-weight: 700; color: var(--corporate-blue); display: flex; align-items: center; }
         .parent-title span { margin-left: 10px; }
@@ -175,7 +172,6 @@ function showSection(sectionId) {
     document.getElementById('editarStock').style.display = 'none';
     document.getElementById(sectionId).style.display = 'block';
 
-    // Actualizar clase active en el menú
     document.getElementById('link-inventario').classList.remove('active');
     document.getElementById('link-editarStock').classList.remove('active');
     document.getElementById('link-' + sectionId).classList.add('active');
@@ -212,14 +208,25 @@ window.login = async function () {
     }
 };
 
+// ==========================================================
+// 🛡️ AQUÍ ESTÁ EL ESCUDO DE SEGURIDAD PARA CARGAR PRODUCTOS
+// ==========================================================
 async function loadProducts(){
     document.getElementById("productTable").innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:var(--text-gray);'><i class='fas fa-spinner fa-spin'></i> Cargando inventario...</td></tr>";
     document.getElementById("stockEditorTable").innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:var(--text-gray);'><i class='fas fa-spinner fa-spin'></i> Cargando publicaciones...</td></tr>";
     
     try {
+        const token = localStorage.getItem("token");
         const resp = await fetch(API + "/products-grouped", {
-            headers:{ "Authorization": "Bearer " + localStorage.getItem("token") }
+            headers:{ "Authorization": "Bearer " + token }
         });
+
+        // ESCUDO: Si no hay llave o es falsa, lo expulsa.
+        if (resp.status === 401 || resp.status === 403) {
+            alert("🔒 Acceso denegado o sesión expirada. Por favor, inicia sesión.");
+            logout();
+            return; // Detiene todo
+        }
 
         const data = await resp.json();
         allProducts = data.products || [];
@@ -234,7 +241,6 @@ async function loadProducts(){
 
 function setStatusFilter(status, btnElement){
     currentStatusFilter = status;
-    // Actualizar estado visual de los botones de filtro
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     btnElement.classList.add('active');
     applyFilters();
@@ -295,9 +301,6 @@ function renderTable(productsList){
     table.innerHTML = htmlContent;
 }
 
-// =========================================================
-// NUEVA RENDERIZACIÓN VISUAL MEJORADA (CORPORATIVA)
-// =========================================================
 function renderStockTable(productsList) {
     const table = document.getElementById("stockEditorTable");
     
@@ -335,7 +338,6 @@ function renderStockTable(productsList) {
         const group = grouped[parentId];
         let photo = group.thumbnail ? `<img src="${group.thumbnail}" class="product-thumb">` : "<div class='product-thumb' style='display:flex;align-items:center;justify-content:center;background:#eee;color:#aaa;'><i class='fas fa-camera fa-2x'></i></div>";
 
-        // --- FILA PADRE (DISEÑO MEJORADO) ---
         finalHTML += `
             <tr class="parent-row" onclick="toggleVariations('${parentId}', this)">
                 <td style="text-align:center; padding: 15px;">${photo}</td>
@@ -357,7 +359,6 @@ function renderStockTable(productsList) {
             </tr>
         `;
 
-        // --- FILA HIJA (DISEÑO LIMPIO Y MODERNO) ---
         let childRows = `<tr id="vars-${parentId}" style="display:none;">
                             <td colspan="5" class="child-container">
                                 <table class="child-table">`;
@@ -372,7 +373,8 @@ function renderStockTable(productsList) {
                         <div class="variant-title">${varDetail}</div>
                         <div style="font-family:monospace; font-size:11px; color:#aaa; margin-top:5px;">${v.meli_item_id}</div>
                     </td>
-                    <td></td> <td>
+                    <td></td>
+                    <td>
                         <div class="stock-control">
                             <button class="btn-qty btn-minus" onclick="changeStock('${v.meli_item_id}', -1)"><i class="fas fa-minus"></i></button>
                             <span id="stock-val-${v.meli_item_id}" class="stock-val">${v.stock}</span>
@@ -394,7 +396,6 @@ function renderStockTable(productsList) {
     table.innerHTML = finalHTML;
 }
 
-// Función para abrir y cerrar las variantes con animación de icono
 function toggleVariations(parentId, rowElement) {
     const row = document.getElementById(`vars-${parentId}`);
     const icon = rowElement.querySelector('.view-variants-btn i');
@@ -420,6 +421,9 @@ function changeStock(id, amount) {
     span.innerText = newStock;
 }
 
+// ==========================================================
+// 🛡️ ESCUDO PARA GUARDAR STOCK
+// ==========================================================
 async function saveStockToMeli(id) {
     let span = document.getElementById(`stock-val-${id}`);
     let newStock = parseInt(span.innerText);
@@ -441,8 +445,14 @@ async function saveStockToMeli(id) {
             body: JSON.stringify({ new_stock: newStock })
         });
 
+        // ESCUDO
+        if (response.status === 401 || response.status === 403) {
+            alert("🔒 Sesión expirada. Por favor, inicia sesión de nuevo.");
+            logout();
+            return;
+        }
+
         if (response.ok) {
-            // Usamos un toast o alerta más bonita si pudieras, por ahora alerta nativa
             alert("✅ Stock actualizado correctamente en Mercado Libre.");
             let prod = allProducts.find(p => p.meli_item_id === id);
             if(prod) prod.stock = newStock;
@@ -472,6 +482,9 @@ function filterStock() {
     }, 300);
 }
 
+// ==========================================================
+// 🛡️ ESCUDO PARA SINCRONIZAR
+// ==========================================================
 async function syncML(){
     const btn = document.querySelector(".btn-sync");
     const originalHTML = btn.innerHTML;
@@ -479,10 +492,18 @@ async function syncML(){
     btn.disabled = true;
 
     try {
+        const token = localStorage.getItem("token");
         const resp = await fetch(API + "/meli/sync", {
             method:"POST",
-            headers:{ "Authorization": "Bearer " + localStorage.getItem("token") }
+            headers:{ "Authorization": "Bearer " + token }
         });
+
+        // ESCUDO
+        if (resp.status === 401 || resp.status === 403) {
+            alert("🔒 Sesión expirada. Por favor, inicia sesión de nuevo.");
+            logout();
+            return;
+        }
 
         if(resp.ok){
             alert("✅ Sincronización completada con éxito.");
@@ -499,10 +520,8 @@ async function syncML(){
 }
 
 function logout(){
-    if(confirm("¿Estás seguro de que deseas cerrar sesión?")){
-        localStorage.clear();
-        location.reload();
-    }
+    localStorage.removeItem("token");
+    location.reload();
 }
 </script>
 
