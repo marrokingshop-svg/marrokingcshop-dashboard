@@ -15,9 +15,12 @@
             --text-gray: #636e72;
         }
 
+        /* Esto asegura que los anchos de los menús sean exactos y no empujen la tabla */
+        * { box-sizing: border-box; } 
+
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-dark); }
         
-        /* Login Screen - Más moderno */
+        /* Login Screen */
         .login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #ffffff; }
         .login-box { padding: 50px; border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.08); width: 420px; text-align: center; }
         .login-box h2 { color: var(--corporate-blue); font-weight: 700; margin-bottom: 30px; }
@@ -25,17 +28,19 @@
         .login-box button { width: 100%; padding: 18px; border: none; background: var(--corporate-blue); color: white; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; transition: 0.2s; }
         .login-box button:hover { background: #34495e; box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3); }
 
-        /* Layout Principal */
+        /* Layout Principal - AQUÍ HICIMOS EL MENÚ MÁS DELGADO */
         .layout { display: none; min-height: 100vh; }
-        .sidebar { width: 280px; background: #ffffff; border-right: 1px solid #edf2f7; padding: 40px 30px; position: fixed; height: 100vh; box-shadow: 5px 0 15px rgba(0,0,0,0.02); }
-        .sidebar h3 { color: var(--primary-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 30px; }
-        .sidebar a { display: block; padding: 15px; margin-bottom: 10px; cursor: pointer; color: var(--text-gray); text-decoration: none; font-weight: 600; border-radius: 10px; transition: 0.2s; }
+        .sidebar { width: 220px; background: #ffffff; border-right: 1px solid #edf2f7; padding: 30px 15px; position: fixed; height: 100vh; box-shadow: 5px 0 15px rgba(0,0,0,0.02); }
+        .sidebar h3 { color: var(--primary-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 30px; font-size: 14px; text-align: center; }
+        .sidebar a { display: block; padding: 12px 15px; margin-bottom: 8px; cursor: pointer; color: var(--text-gray); text-decoration: none; font-weight: 600; border-radius: 10px; transition: 0.2s; font-size: 13px; }
         .sidebar a:hover, .sidebar a.active { color: var(--primary-gold); background: #fffbf4; }
-        .main { margin-left: 330px; padding: 50px; width: calc(100% - 330px); }
+        
+        /* Ajustamos el margen para expandir la tabla */
+        .main { margin-left: 220px; padding: 40px; width: calc(100% - 220px); }
         .main h2 { font-size: 28px; font-weight: 700; color: var(--corporate-blue); margin-bottom: 25px; }
 
         /* Componentes Corporativos */
-        .search-input { width: 100%; padding: 15px 20px; margin-top: 15px; border: 1px solid #dfe6e9; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+        .search-input { width: 100%; padding: 15px 20px; margin-top: 15px; border: 1px solid #dfe6e9; border-radius: 12px; font-size: 16px; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
         .btn { padding: 12px 20px; margin: 8px; cursor: pointer; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; transition: 0.2s; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
         .btn-sync { background: var(--corporate-blue); color: white; }
@@ -45,8 +50,8 @@
 
         /* Tablas Profesionales */
         table { width: 100%; border-collapse: separate; border-spacing: 0 12px; margin-top: 25px; }
-        th { padding: 15px 20px; color: var(--text-gray); font-weight: 600; text-align: left; border-bottom: 2px solid #edf2f7; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
-        td { padding: 20px; background: white; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; }
+        th { padding: 15px 15px; color: var(--text-gray); font-weight: 600; text-align: left; border-bottom: 2px solid #edf2f7; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+        td { padding: 15px; background: white; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; }
         tr:first-child td { border-top: none; }
         tr td:first-child { border-left: 1px solid #edf2f7; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         tr td:last-child { border-right: 1px solid #edf2f7; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
@@ -56,27 +61,28 @@
         /* Estilos específicos para la tabla de Stock */
         .parent-row { cursor: pointer; background: white; }
         .parent-row:hover { background: #fefefe !important; }
-        .product-thumb { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .parent-title { font-size: 18px; font-weight: 700; color: var(--corporate-blue); display: flex; align-items: center; }
+        /* Redujimos la imagen un poco para ahorrar ancho de pantalla */
+        .product-thumb { width: 85px; height: 85px; border-radius: 10px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .parent-title { font-size: 16px; font-weight: 700; color: var(--corporate-blue); display: flex; align-items: center; }
         .parent-title span { margin-left: 10px; }
-        .total-stock { font-size: 22px; font-weight: 700; color: var(--primary-gold); }
-        .total-stock small { font-size: 13px; font-weight: 400; color: var(--text-gray); display: block; }
-        .view-variants-btn { background: none; border: none; color: var(--primary-gold); font-weight: 700; cursor: pointer; font-size: 15px; display: flex; align-items: center; }
+        .total-stock { font-size: 20px; font-weight: 700; color: var(--primary-gold); }
+        .total-stock small { font-size: 12px; font-weight: 400; color: var(--text-gray); display: block; }
+        .view-variants-btn { background: none; border: none; color: var(--primary-gold); font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; }
         .view-variants-btn i { margin-left: 8px; transition: 0.3s; }
 
         /* Tabla de Variantes (Hija) */
         .child-container { background: #f8f9fc !important; box-shadow: inset 0 5px 15px rgba(0,0,0,0.03) !important; padding: 0 !important; }
         .child-table { width: 100%; border-collapse: collapse; background: transparent; box-shadow: none; border-spacing: 0; margin-top: 0; }
-        .child-table td { background: transparent; border: none; border-bottom: 1px solid #e0e6ed; padding: 18px; }
+        .child-table td { background: transparent; border: none; border-bottom: 1px solid #e0e6ed; padding: 15px; }
         .child-table tr:last-child td { border-bottom: none; }
-        .variant-title { font-weight: 600; color: var(--text-dark); font-size: 15px; }
+        .variant-title { font-weight: 600; color: var(--text-dark); font-size: 14px; }
         .stock-control { display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .stock-val { font-size: 20px; font-weight: 700; min-width: 40px; text-align: center; }
-        .btn-qty { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .stock-val { font-size: 18px; font-weight: 700; min-width: 35px; text-align: center; }
+        .btn-qty { width: 35px; height: 35px; border-radius: 50%; border: none; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-minus { background: #ff7675; color: white; }
         .btn-plus { background: #55efc4; color: white; }
         .btn-qty:hover { transform: scale(1.1); }
-        .btn-save { background: var(--corporate-blue); color: white; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; max-width: 180px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-save { background: var(--corporate-blue); color: white; padding: 10px 15px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; max-width: 150px; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 13px; }
         .btn-save:hover { background: var(--primary-gold); }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
