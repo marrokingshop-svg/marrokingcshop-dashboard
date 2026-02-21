@@ -164,9 +164,9 @@
     </div>
 </div>
 
-<div id="live-toast" style="display: none; position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 9999; font-family: sans-serif; transition: opacity 0.5s; border-left: 5px solid #1e7e34;">
-    <strong style="font-size: 16px;">🔔 Notificación ML</strong><br>
-    <span id="toast-message" style="font-size: 14px;">Mensaje de prueba</span>
+<div id="live-toast" style="display: none; position: fixed; bottom: 30px; right: 30px; background-color: #28a745; color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; font-family: 'Inter', sans-serif; transition: opacity 0.5s; border-left: 6px solid #1e7e34; min-width: 280px;">
+    <strong style="font-size: 16px; display: block; margin-bottom: 5px;">🔔 Mercado Libre</strong>
+    <span id="toast-message" style="font-size: 14px; font-weight: 500;">Mensaje de prueba</span>
 </div>
 
 <script>
@@ -192,8 +192,8 @@ window.onload = function(){
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("dashboardLayout").style.display = "flex";
         loadProducts();
-        updateTimestamp(); // Inicia el reloj al entrar
-        connectWebSocket(); // <--- NUEVO: Iniciar radar en vivo al entrar
+        updateTimestamp(); 
+        connectWebSocket(); // Radar encendido
     }
 };
 
@@ -220,7 +220,6 @@ window.login = async function () {
 };
 
 async function loadProducts(){
-    // Si no hay token, no hacemos nada
     if(!localStorage.getItem("token")) return;
 
     try {
@@ -230,7 +229,6 @@ async function loadProducts(){
         });
 
         if (resp.status === 401 || resp.status === 403) {
-            alert("🔒 Acceso denegado o sesión expirada. Por favor, inicia sesión.");
             logout();
             return;
         }
@@ -283,7 +281,7 @@ function renderTable(productsList){
     table.innerHTML = ""; 
 
     if(productsList.length === 0) {
-        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:var(--text-gray);'><i class='fas fa-search' style='font-size:24px; margin-bottom:10px;'></i><br>No se encontraron productos</td></tr>";
+        table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:var(--text-gray);'>No se encontraron productos</td></tr>";
         return;
     }
 
@@ -313,7 +311,7 @@ function renderStockTable(productsList) {
     if(!table) return;
     
     if(productsList.length === 0) {
-        table.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-gray);'><i class='fas fa-box-open' style='font-size:30px; margin-bottom:15px;'></i><br>No hay publicaciones para mostrar</td></tr>";
+        table.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-gray);'>No hay publicaciones</td></tr>";
         return;
     }
 
@@ -344,7 +342,7 @@ function renderStockTable(productsList) {
 
     for (let parentId in grouped) {
         const group = grouped[parentId];
-        let photo = group.thumbnail ? `<img src="${group.thumbnail}" class="product-thumb">` : "<div class='product-thumb' style='display:flex;align-items:center;justify-content:center;background:#eee;color:#aaa;'><i class='fas fa-camera fa-2x'></i></div>";
+        let photo = group.thumbnail ? `<img src="${group.thumbnail}" class="product-thumb">` : "<div class='product-thumb' style='display:flex;align-items:center;justify-content:center;background:#eee;'><i class='fas fa-camera fa-2x'></i></div>";
 
         finalHTML += `
             <tr class="parent-row" onclick="toggleVariations('${parentId}', this)">
@@ -353,34 +351,21 @@ function renderStockTable(productsList) {
                     <div class="parent-title"><i class="fas fa-folder" style="color:var(--primary-gold);"></i> <span>${group.title}</span></div>
                 </td>
                 <td style="font-family:monospace; font-size:13px; color:var(--text-gray);">${parentId}</td>
+                <td style="text-align:center;"><div class="total-stock">${group.totalStock} <small>unidades</small></div></td>
                 <td style="text-align:center;">
-                    <div class="total-stock">
-                        ${group.totalStock}
-                        <small>unidades</small>
-                    </div>
-                </td>
-                <td style="text-align:center;">
-                    <button class="view-variants-btn">
-                        Ver ${group.variations.length} variantes <i class="fas fa-chevron-down"></i>
-                    </button>
+                    <button class="view-variants-btn">Ver ${group.variations.length} variantes <i class="fas fa-chevron-down"></i></button>
                 </td>
             </tr>
         `;
 
-        let childRows = `<tr id="vars-${parentId}" style="display:none;">
-                            <td colspan="5" class="child-container">
-                                <table class="child-table">`;
+        let childRows = `<tr id="vars-${parentId}" style="display:none;"><td colspan="5" class="child-container"><table class="child-table">`;
         
         group.variations.forEach(v => {
             let varDetail = v.title.includes("(") ? v.title.substring(v.title.indexOf("(")) : "(Versión Única)";
-            
             childRows += `
                 <tr>
                     <td style="width:60px; text-align:center; color:#ccc;"><i class="fas fa-level-up-alt fa-rotate-90"></i></td>
-                    <td>
-                        <div class="variant-title">${varDetail}</div>
-                        <div style="font-family:monospace; font-size:11px; color:#aaa; margin-top:5px;">${v.meli_item_id}</div>
-                    </td>
+                    <td><div class="variant-title">${varDetail}</div></td>
                     <td></td>
                     <td>
                         <div class="stock-control">
@@ -390,9 +375,7 @@ function renderStockTable(productsList) {
                         </div>
                     </td>
                     <td style="text-align:center;">
-                        <button class="btn-save" onclick="saveStockToMeli('${v.meli_item_id}')">
-                            <i class="fas fa-cloud-upload-alt" style="margin-right:8px;"></i> Guardar Stock
-                        </button>
+                        <button class="btn-save" onclick="saveStockToMeli('${v.meli_item_id}')">Guardar Stock</button>
                     </td>
                 </tr>
             `;
@@ -400,31 +383,24 @@ function renderStockTable(productsList) {
         childRows += `</table></td></tr>`;
         finalHTML += childRows;
     }
-
     table.innerHTML = finalHTML;
 }
 
 function toggleVariations(parentId, rowElement) {
     const row = document.getElementById(`vars-${parentId}`);
     const icon = rowElement.querySelector('.view-variants-btn i');
-    
     if (row.style.display === "none") {
         row.style.display = "table-row";
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-        rowElement.style.background = "#f1f3f5";
+        icon.className = 'fas fa-chevron-up';
     } else {
         row.style.display = "none";
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-        rowElement.style.background = "white";
+        icon.className = 'fas fa-chevron-down';
     }
 }
 
 function changeStock(id, amount) {
     let span = document.getElementById(`stock-val-${id}`);
-    let current = parseInt(span.innerText);
-    let newStock = current + amount;
+    let newStock = parseInt(span.innerText) + amount;
     if (newStock < 0) newStock = 0; 
     span.innerText = newStock;
 }
@@ -434,97 +410,45 @@ async function saveStockToMeli(id) {
     let newStock = parseInt(span.innerText);
     let token = localStorage.getItem("token");
 
-    let btn = event.target.closest('button');
-    let originalHTML = btn.innerHTML;
-    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Guardando...";
-    btn.disabled = true;
-    btn.style.background = "#b2bec3";
-
     try {
         let response = await fetch(`${API}/meli/update_stock/${id}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ new_stock: newStock })
         });
-
-        if (response.status === 401 || response.status === 403) {
-            alert("🔒 Sesión expirada. Por favor, inicia sesión de nuevo.");
-            logout();
-            return;
-        }
-
         if (response.ok) {
-            alert("✅ Stock actualizado correctamente en Mercado Libre.");
-            let prod = allProducts.find(p => p.meli_item_id === id);
-            if(prod) prod.stock = newStock;
-            // No hacemos un loadProducts completo aquí para no perder la vista, 
-            // pero actualizamos la hora de sincronización.
+            alert("✅ Actualizado");
+            loadProducts();
             updateTimestamp();
-        } else {
-            let errData = await response.json();
-            alert("⚠️ Mercado Libre reportó un problema: " + (errData.detail || "Error desconocido"));
         }
-    } catch (error) {
-        alert("❌ No se pudo conectar con el servidor.");
-    } finally {
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
-        btn.style.background = "var(--corporate-blue)";
-    }
+    } catch (error) { console.error(error); }
 }
 
 function filterStock() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         let text = document.getElementById("searchStockInput").value.toLowerCase();
-        let filtered = allProducts.filter(p => 
-            (p.title || "").toLowerCase().includes(text) || 
-            (p.meli_item_id || "").toLowerCase().includes(text)
-        );
+        let filtered = allProducts.filter(p => (p.title || "").toLowerCase().includes(text));
         renderStockTable(filtered);
     }, 300);
 }
 
 async function syncML(){
     const btn = document.querySelector(".btn-sync");
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Sincronizando...";
     btn.disabled = true;
-
     try {
         const token = localStorage.getItem("token");
         const resp = await fetch(API + "/meli/sync", {
             method:"POST",
             headers:{ "Authorization": "Bearer " + token }
         });
-
-        if (resp.status === 401 || resp.status === 403) {
-            alert("🔒 Sesión expirada. Por favor, inicia sesión de nuevo.");
-            logout();
-            return;
-        }
-
-        // Leemos la respuesta exacta que manda tu nuevo backend
-        const data = await resp.json(); 
-
         if(resp.ok){
-            // Ahora te dirá el número exacto de productos
-            alert(`✅ Sincronización completada. Se guardaron ${data.sincronizados} productos.`);
             await loadProducts();
             updateTimestamp();
-        } else {
-            // Si Mercado Libre rechaza, te dirá exactamente por qué
-            alert("⚠️ Mercado Libre dice:\n" + (data.detail || "Error desconocido"));
+            alert("✅ Sincronizado");
         }
-    } catch (e) {
-        alert("❌ Error de conexión con el servidor.");
-    } finally {
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
-    }
+    } catch (e) { console.error(e); }
+    finally { btn.disabled = false; }
 }
 
 function logout(){
@@ -532,63 +456,46 @@ function logout(){
     location.reload();
 }
 
-// ==========================================================
-// 🕒 ACTUALIZACIÓN AUTOMÁTICA VISUAL CON RELOJ
-// ==========================================================
 function updateTimestamp() {
     const ahora = new Date();
-    // Formato de hora con segundos: HH:MM:SS AM/PM
     const horaTexto = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const elemento = document.getElementById("last-update-time");
-    if (elemento) {
-        elemento.innerHTML = "⏱️ Sincronizado automáticamente: " + horaTexto;
-    }
+    if (elemento) elemento.innerHTML = "⏱️ Sincronizado automáticamente: " + horaTexto;
 }
 
+// Reloj de respaldo largo (10 min) para probar el túnel en vivo
 setInterval(() => {
-    // Solo recargamos si el usuario está dentro (tiene token)
     if (localStorage.getItem("token")) {
-        console.log("🔄 Actualizando inventario automáticamente...");
         loadProducts(); 
         updateTimestamp();
     }
-}, 600000); // Se ejecuta cada 60 segundos
+}, 600000); 
 
 // ==========================================================
-// TÚNEL EN VIVO (WEBSOCKETS) 🚇 (NUEVO)
+// TÚNEL EN VIVO (WEBSOCKETS) 🚇
 // ==========================================================
 function connectWebSocket() {
-    // Cambiamos 'https://' por 'wss://' para abrir el túnel
     const wsUrl = API.replace("http://", "ws://").replace("https://", "wss://") + "/ws/notifications";
     const socket = new WebSocket(wsUrl);
 
-    socket.onopen = function(e) {
-        console.log("✅ Conectado al radar en vivo de Mercado Libre");
-    };
+    socket.onopen = function() { console.log("✅ Radar en vivo conectado"); };
 
     socket.onmessage = function(event) {
-        // 🔍 ESTA LÍNEA ES CLAVE: Veremos en la consola qué manda el servidor
-        console.log("📡 Datos recibidos por el túnel:", event.data);
-
+        console.log("📡 Datos recibidos:", event.data);
         try {
             const data = JSON.parse(event.data);
-            
             if (data.type === "notification") {
-                // Usamos el campo "message" que viene de tu main.py
-                showLiveToast(data.message || "Cambio en Mercado Libre");
-                
-                // Recargamos la tabla para que veas el cambio visualmente
+                // LLAMADA A LA ALERTA VERDE
+                showLiveToast(data.message || "Actualización detectada");
                 loadProducts();
                 updateTimestamp();
             }
-        } catch (error) {
-            console.error("❌ Error al procesar el mensaje del servidor:", error);
-        }
+        } catch (e) { console.error("Error en túnel:", e); }
     };
 
-    socket.onclose = function(event) {
-        console.log("⚠️ Radar desconectado. Intentando reconectar en 5s...");
-        setTimeout(connectWebSocket, 5000); // Auto-reconectar si se cae
+    socket.onclose = function() {
+        console.log("⚠️ Desconectado. Reconectando...");
+        setTimeout(connectWebSocket, 5000);
     };
 }
 
@@ -596,17 +503,22 @@ function showLiveToast(message) {
     const toast = document.getElementById("live-toast");
     const msgSpan = document.getElementById("toast-message");
     
-    msgSpan.innerText = message;
-    toast.style.display = "block";
-    toast.style.opacity = "1";
+    if (toast && msgSpan) {
+        console.log("🎨 Mostrando Toast con mensaje:", message);
+        msgSpan.innerText = message;
+        
+        toast.style.display = "block";
+        toast.style.opacity = "1";
+        toast.style.zIndex = "10000"; 
 
-    // Ocultarlo suavemente después de 5 segundos
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => { toast.style.display = "none"; }, 500);
-    }, 5000);
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => { toast.style.display = "none"; }, 500);
+        }, 6000);
+    } else {
+        console.error("❌ No encontré 'live-toast' en el HTML");
+    }
 }
-
 </script>
 
 </body>
