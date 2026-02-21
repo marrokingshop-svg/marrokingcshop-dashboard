@@ -164,6 +164,11 @@
     </div>
 </div>
 
+<div id="live-toast" style="display: none; position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 9999; font-family: sans-serif; transition: opacity 0.5s; border-left: 5px solid #1e7e34;">
+    <strong style="font-size: 16px;">🔔 Notificación ML</strong><br>
+    <span id="toast-message" style="font-size: 14px;">Mensaje de prueba</span>
+</div>
+
 <script>
 const API = "https://marrokingcshop-api.onrender.com";
 
@@ -188,6 +193,7 @@ window.onload = function(){
         document.getElementById("dashboardLayout").style.display = "flex";
         loadProducts();
         updateTimestamp(); // Inicia el reloj al entrar
+        connectWebSocket(); // <--- NUEVO: Iniciar radar en vivo al entrar
     }
 };
 
@@ -547,6 +553,50 @@ setInterval(() => {
         updateTimestamp();
     }
 }, 60000); // Se ejecuta cada 60 segundos
+
+// ==========================================================
+// TÚNEL EN VIVO (WEBSOCKETS) 🚇 (NUEVO)
+// ==========================================================
+function connectWebSocket() {
+    // Cambiamos 'https://' por 'wss://' para abrir el túnel
+    const wsUrl = API.replace("http://", "ws://").replace("https://", "wss://") + "/ws/notifications";
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = function(e) {
+        console.log("✅ Conectado al radar en vivo de Mercado Libre");
+    };
+
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.type === "notification") {
+            // 1. Mostrar la notificación flotante
+            showLiveToast(data.message);
+            // 2. ¡MAGIA! Recargar la tabla automáticamente
+            loadProducts();
+            updateTimestamp();
+        }
+    };
+
+    socket.onclose = function(event) {
+        console.log("⚠️ Radar desconectado. Intentando reconectar en 5s...");
+        setTimeout(connectWebSocket, 5000); // Auto-reconectar si se cae
+    };
+}
+
+function showLiveToast(message) {
+    const toast = document.getElementById("live-toast");
+    const msgSpan = document.getElementById("toast-message");
+    
+    msgSpan.innerText = message;
+    toast.style.display = "block";
+    toast.style.opacity = "1";
+
+    // Ocultarlo suavemente después de 5 segundos
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => { toast.style.display = "none"; }, 500);
+    }, 5000);
+}
 
 </script>
 
