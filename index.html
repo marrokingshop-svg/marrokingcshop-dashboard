@@ -101,6 +101,7 @@
         <h3>MENÚ PRINCIPAL</h3>
         <a onclick="showSection('inventario')" id="link-inventario" class="active"><i class="fas fa-box-open" style="margin-right:10px;"></i> Inventario ML</a>
         <a onclick="showSection('editarStock')" id="link-editarStock"><i class="fas fa-edit" style="margin-right:10px;"></i> Control de Stock</a>
+        <a onclick="showSection('bovedaClaves')" id="link-bovedaClaves"><i class="fas fa-lock" style="margin-right:10px;"></i> Bóveda de Claves</a>
         <hr style="border:0; border-top:1px solid #edf2f7; margin: 30px 0;">
         <a onclick="logout()" style="color: #d63031;"><i class="fas fa-sign-out-alt" style="margin-right:10px;"></i> Cerrar sesión</a>
     </div>
@@ -161,8 +162,45 @@
             </table>
         </div>
 
-    </div>
-</div>
+        <div id="bovedaClaves" style="display:none;">
+            <h2>Bóveda de Seguridad</h2>
+            <p style="color: var(--text-gray); margin-bottom: 25px;">Guarda de forma privada los accesos de tus correos y plataformas de trabajo.</p>
+
+            <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                <h4 style="margin-top:0; color: var(--corporate-blue); font-size: 12px; letter-spacing: 1px;">NUEVA CREDENCIAL</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-gray); display: block; margin-bottom: 5px;">PLATAFORMA</label>
+                        <input id="newSite" class="search-input" style="margin-top:0;" placeholder="Ej: Outlook Ventas">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-gray); display: block; margin-bottom: 5px;">USUARIO / EMAIL</label>
+                        <input id="newUser" class="search-input" style="margin-top:0;" placeholder="usuario@correo.com">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-gray); display: block; margin-bottom: 5px;">CONTRASEÑA</label>
+                        <input id="newPass" class="search-input" style="margin-top:0;" placeholder="Clave...">
+                    </div>
+                    <button class="btn btn-sync" style="margin:0; height: 48px; padding: 0 25px;" onclick="saveNewCredential()">
+                        <i class="fas fa-shield-alt"></i> Guardar
+                    </button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="padding-left: 20px;">Plataforma</th>
+                        <th>Usuario / Correo</th>
+                        <th>Contraseña</th>
+                        <th style="text-align:center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="bovedaTable"></tbody>
+            </table>
+        </div>
+
+    </div> </div>
 
 <div id="live-toast" style="display: none; position: fixed; bottom: 30px; right: 30px; background-color: #28a745; color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; font-family: 'Inter', sans-serif; transition: opacity 0.5s; border-left: 6px solid #1e7e34; min-width: 280px;">
     <strong style="font-size: 16px; display: block; margin-bottom: 5px;">🔔 Mercado Libre</strong>
@@ -176,14 +214,30 @@ let allProducts = [];
 let currentStatusFilter = "all";
 let searchTimeout;
 
+// ==========================================================
+// NAVEGACIÓN ENTRE SECCIONES (Actualizada 🚀)
+// ==========================================================
 function showSection(sectionId) {
+    // 1. Ocultamos TODAS las secciones para que no se encimen
     document.getElementById('inventario').style.display = 'none';
     document.getElementById('editarStock').style.display = 'none';
+    document.getElementById('bovedaClaves').style.display = 'none';
+
+    // 2. Mostramos la que elegiste
     document.getElementById(sectionId).style.display = 'block';
 
+    // 3. Quitamos el color dorado de TODOS los botones del menú
     document.getElementById('link-inventario').classList.remove('active');
     document.getElementById('link-editarStock').classList.remove('active');
+    document.getElementById('link-bovedaClaves').classList.remove('active');
+
+    // 4. Se lo ponemos solo al botón que presionaste
     document.getElementById('link-' + sectionId).classList.add('active');
+
+    // 5. ¡VITAL! Si entras a la bóveda, pedimos los datos a la base de datos
+    if (sectionId === 'bovedaClaves') {
+        loadBoveda();
+    }
 }
 
 window.onload = function(){
