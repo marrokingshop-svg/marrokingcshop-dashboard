@@ -488,16 +488,15 @@ function connectWebSocket() {
         try {
             const data = JSON.parse(event.data);
             if (data.type === "notification") {
-                // 1. La alerta y el sonido salen de inmediato ⚡
+                // 1. Alerta y sonido al instante ⚡
                 showLiveToast(data.message || "Actualización detectada");
                 
-                // 2. Esperamos 7 segundos para que el servidor termine de procesar
-                // y Mercado Libre suelte el dato nuevo.
+                // 2. Esperamos 12 segundos (Sincronizado con el servidor) 🕒
                 setTimeout(() => {
-                    console.log("🔄 Recargando datos actualizados...");
+                    console.log("🔄 Recargando datos frescos de la DB...");
                     loadProducts();
                     updateTimestamp();
-                }, 7000); 
+                }, 12000); // <-- Cambiado de 7000 a 12000
             }
         } catch (e) { 
             console.error("Error en túnel:", e); 
