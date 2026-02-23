@@ -219,13 +219,23 @@ window.login = async function () {
     }
 };
 
-async function loadProducts(){
-    if(!localStorage.getItem("token")) return;
+async function loadProducts() {
+    if (!localStorage.getItem("token")) return;
 
     try {
         const token = localStorage.getItem("token");
-        const resp = await fetch(API + "/products-grouped", {
-            headers:{ "Authorization": "Bearer " + token }
+        
+        // 🚀 TRUCO: Agregamos ?t= y la hora actual en milisegundos
+        // Esto obliga al navegador a pedir SIEMPRE datos frescos
+        const urlRefrescada = API + "/products-grouped?t=" + Date.now();
+
+        const resp = await fetch(urlRefrescada, {
+            method: "GET",
+            headers: { 
+                "Authorization": "Bearer " + token,
+                "Cache-Control": "no-cache", // 🛡️ Refuerzo extra anti-caché
+                "Pragma": "no-cache"
+            }
         });
 
         if (resp.status === 401 || resp.status === 403) {
