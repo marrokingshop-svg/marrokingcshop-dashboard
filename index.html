@@ -612,6 +612,114 @@ function showLiveToast(message) {
         console.error("❌ No encontré 'live-toast' en el HTML");
     }
 }
+
+// ==========================================================
+// 🔐 FUNCIONES DE LA BÓVEDA (EL CEREBRO)
+// ==========================================================
+
+async function loadBoveda() {
+    const token = localStorage.getItem("token");
+    try {
+        const resp = await fetch(API + "/work-credentials", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await resp.json();
+        const table = document.getElementById("bovedaTable");
+        
+        if(!table) return; // Seguridad por si no encuentra la tabla
+        table.innerHTML = "";
+
+        if (!data.credentials || data.credentials.length === 0) {
+            table.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:var(--text-gray);'>La bóveda está vacía.</td></tr>";
+            return;
+        }
+
+        data.credentials.forEach(c => {
+            table.innerHTML += `
+                <tr>
+                    <td style="padding-left: 20px;"><strong>${c.site_name}</strong></td>
+                    <td><span style="color:var(--text-gray); font-size:13px;">${c.email_user}</span></td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="password" value="${c.password_val}" id="pass-${c.id}" readonly 
+                                   style="border:none; background:none; font-family:monospace; width:110px; font-size:15px; color:var(--primary-gold); font-weight:bold;">
+                            <button onclick="togglePass(${c.id})" style="border:none; background:none; cursor:pointer; color:#ccc;"><i class="fas fa-eye" id="eye-${c.id}"></i></button>
+                            <button onclick="copyPass('${c.password_val}')" style="border:none; background:none; cursor:pointer; color:var(--corporate-blue);"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">
+                        <button class="btn" style="background:#fff0f0; color:#ff7675; padding:6px 10px; border-radius:8px;" onclick="deleteCredential(${c.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (e) { 
+        console.error("Error en bóveda:", e); 
+    }
+}
+
+async function saveNewCredential() {
+    const site = document.getElementById("newSite").value;
+    const user = document.getElementById("newUser").value;
+    const pass = document.getElementById("newPass").value;
+    const token = localStorage.getItem("token");
+
+    if(!site || !user || !pass) {
+        alert("⚠️ Por favor llena todos los campos");
+        return;
+    }
+
+    try {
+        const resp = await fetch(API + "/work-credentials", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+            body: JSON.stringify({ site_name: site, email_user: user, password_val: pass, category: "trabajo" })
+        });
+
+        if(resp.ok) {
+            document.getElementById("newSite").value = "";
+            document.getElementById("newUser").value = "";
+            document.getElementById("newPass").value = "";
+            loadBoveda();
+            showLiveToast("✅ Guardado en la bóveda con éxito");
+        } else {
+            alert("Error al guardar. Revisa la consola.");
+        }
+    } catch (error) {
+        console.error("Error al guardar credencial:", error);
+    }
+}
+
+async function deleteCredential(id) {
+    if(!confirm("¿Borrar esta clave permanentemente?")) return;
+    const token = localStorage.getItem("token");
+    try {
+        await fetch(API + `/work-credentials/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + token }
+        });
+        loadBoveda();
+    } catch (e) { console.error(e); }
+}
+
+function togglePass(id) {
+    const input = document.getElementById(`pass-${id}`);
+    const eye = document.getElementById(`eye-${id}`);
+    if(input.type === "password") {
+        input.type = "text";
+        eye.className = "fas fa-eye-slash";
+    } else {
+        input.type = "password";
+        eye.className = "fas fa-eye";
+    }
+}
+
+function copyPass(val) {
+    navigator.clipboard.writeText(val);
+    showLiveToast("📋 Contraseña copiada al portapapeles");
+}
 </script>
 
 </body>
