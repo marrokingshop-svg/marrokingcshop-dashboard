@@ -102,6 +102,7 @@
         <a onclick="showSection('inventario')" id="link-inventario" class="active"><i class="fas fa-box-open" style="margin-right:10px;"></i> Inventario ML</a>
         <a onclick="showSection('editarStock')" id="link-editarStock"><i class="fas fa-edit" style="margin-right:10px;"></i> Control de Stock</a>
         <a onclick="showSection('bovedaClaves')" id="link-bovedaClaves"><i class="fas fa-lock" style="margin-right:10px;"></i> Bóveda de Claves</a>
+        <a onclick="showSection('proveedores')" id="link-proveedores"><i class="fas fa-truck-loading" style="margin-right:10px;"></i> Órdenes Proveedores</a>
         <hr style="border:0; border-top:1px solid #edf2f7; margin: 30px 0;">
         <a onclick="logout()" style="color: #d63031;"><i class="fas fa-sign-out-alt" style="margin-right:10px;"></i> Cerrar sesión</a>
     </div>
@@ -199,6 +200,26 @@
                 <tbody id="bovedaTable"></tbody>
             </table>
         </div>
+<div id="proveedores" style="display:none;">
+            <h2>📦 Órdenes de Proveedores</h2>
+            <p style="color: var(--text-gray); margin-bottom: 25px;">Monitorea las órdenes de compra de American Eagle, Puma y otros proveedores automáticamente.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="padding-left: 20px;">Proveedor</th>
+                        <th>No. Orden</th>
+                        <th>Estado</th>
+                        <th>Guía de Rastreo</th>
+                        <th>Total</th>
+                        <th style="text-align:center;">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-ordenes-proveedores">
+                    <tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-gray);">Cargando órdenes...</td></tr>
+                </tbody>
+            </table>
+        </div>
 
     </div> </div>
 
@@ -222,6 +243,7 @@ function showSection(sectionId) {
     document.getElementById('inventario').style.display = 'none';
     document.getElementById('editarStock').style.display = 'none';
     document.getElementById('bovedaClaves').style.display = 'none';
+    document.getElementById('proveedores').style.display = 'none';
 
     // 2. Mostramos la que elegiste
     document.getElementById(sectionId).style.display = 'block';
@@ -230,13 +252,17 @@ function showSection(sectionId) {
     document.getElementById('link-inventario').classList.remove('active');
     document.getElementById('link-editarStock').classList.remove('active');
     document.getElementById('link-bovedaClaves').classList.remove('active');
+    document.getElementById('link-proveedores').classList.remove('active');
 
     // 4. Se lo ponemos solo al botón que presionaste
     document.getElementById('link-' + sectionId).classList.add('active');
 
-    // 5. ¡VITAL! Si entras a la bóveda, pedimos los datos a la base de datos
+    // 5. Cargar datos según la sección
     if (sectionId === 'bovedaClaves') {
         loadBoveda();
+    }
+    if (sectionId === 'proveedores') { // NUEVO
+        cargarOrdenesProveedores();
     }
 }
 
@@ -719,6 +745,63 @@ function togglePass(id) {
 function copyPass(val) {
     navigator.clipboard.writeText(val);
     showLiveToast("📋 Contraseña copiada al portapapeles");
+}
+
+// ==========================================================
+// 📦 FUNCIONES DE ÓRDENES DE PROVEEDORES
+// ==========================================================
+async function cargarOrdenesProveedores() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+        const response = await fetch(API + '/api/supplier-orders/', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        const tbody = document.getElementById('lista-ordenes-proveedores');
+        tbody.innerHTML = ''; 
+
+        if (data.status === 'success' && data.orders && data.orders.length > 0) {
+            data.orders.forEach(orden => {
+                const fecha = new Date(orden.created_at).toLocaleDateString();
+                
+                // Colores combinando con tu diseño actual
+                let colorEstado = "#636e72"; 
+                let bgEstado = "#f1f2f6";
+                if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
+                if (orden.status === "EN_CURSO" || orden.status === "ENVIADA") { colorEstado = "#e17055"; bgEstado = "#ffece7"; }
+                if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
+                if (orden.status === "CANCELADA") { colorEstado = "#d63031"; bgEstado = "#ffeded"; }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="padding-left: 20px;"><strong>${orden.supplier_name}</strong></td>
+                        <td style="font-family:monospace; color:var(--text-gray);">${orden.order_number}</td>
+                        <td>
+                            <span style="background-color: ${bgEstado}; color: ${colorEstado}; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold;">
+                                ${orden.status}
+                            </span>
+                        </td>
+                        <td>${orden.tracking_number ? `<i class="fas fa-truck" style="color:var(--text-gray);"></i> ${orden.tracking_number}` : '<span style="color:#ccc; font-style:italic;">Pendiente</span>'}</td>
+                        <td style="font-weight:bold; color:var(--corporate-blue);">$${orden.total_amount ? parseFloat(orden.total_amount).toFixed(2) : '0.00'}</td>
+                        <td style="text-align:center; color:var(--text-gray); font-size:13px;">${fecha}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-gray);">No hay órdenes registradas aún.</td></tr>';
+        }
+    } catch (error) {
+        console.error("Error al cargar órdenes:", error);
+        document.getElementById('lista-ordenes-proveedores').innerHTML = 
+            '<tr><td colspan="6" style="text-align: center; color: #d63031; padding: 40px;">Error al cargar las órdenes.</td></tr>';
+    }
 }
 </script>
 
