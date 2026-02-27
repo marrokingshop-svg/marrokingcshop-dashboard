@@ -811,9 +811,12 @@ function renderizarOrdenes(lista) {
         let colorEstado = "#636e72"; 
         let bgEstado = "#f1f2f6";
         
-        if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
-        if (orden.status === "ENVIADA") { colorEstado = "#e17055"; bgEstado = "#ffece7"; }
-        if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
+        // Dentro de renderizarOrdenes, agrega esta línea:
+    if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
+    if (orden.status === "ENVIADA" || orden.status === "PARCIALMENTE ENVIADA") { 
+    colorEstado = "#e17055"; bgEstado = "#ffece7"; 
+    }
+    if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
 
         tbody.innerHTML += `
             <tr>
