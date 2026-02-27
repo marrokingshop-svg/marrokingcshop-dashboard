@@ -208,6 +208,7 @@
     <button class="btn filter-btn" onclick="filtrarOrdenes('CONFIRMADA', this)">Confirmadas</button>
     <button class="btn filter-btn" onclick="filtrarOrdenes('ENVIADA', this)">Enviadas</button>
     <button class="btn filter-btn" onclick="filtrarOrdenes('ENTREGADA', this)">Entregadas</button>
+    <button class="filter-btn" onclick="filterOrders('CANCELADA')">Canceladas</button>
 </div>
             <table>
                 <thead>
@@ -812,12 +813,19 @@ function renderizarOrdenes(lista) {
         let bgEstado = "#f1f2f6";
         
         // Dentro de renderizarOrdenes, agrega esta línea:
-    if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
-    if (orden.status === "ENVIADA" || orden.status === "PARCIALMENTE ENVIADA") { 
-    colorEstado = "#e17055"; bgEstado = "#ffece7"; 
-    }
-    if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
+    // Lógica de colores por estado
+if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
 
+if (orden.status === "ENVIADA" || orden.status === "PARCIALMENTE ENVIADA") { 
+    colorEstado = "#e17055"; bgEstado = "#ffece7"; 
+}
+
+if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
+
+if (orden.status === "CANCELADA") { 
+    colorEstado = "#d63031"; // Rojo intenso
+    bgEstado = "#fff5f5";    // Fondo rojizo claro
+}
         tbody.innerHTML += `
             <tr>
                 <td style="padding-left: 20px;"><strong>${orden.supplier_name}</strong></td>
