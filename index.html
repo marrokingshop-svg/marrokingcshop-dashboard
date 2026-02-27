@@ -203,7 +203,12 @@
 <div id="proveedores" style="display:none;">
             <h2>📦 Órdenes de Proveedores</h2>
             <p style="color: var(--text-gray); margin-bottom: 25px;">Monitorea las órdenes de compra de American Eagle, Puma y otros proveedores automáticamente.</p>
-            
+            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <button class="btn filter-btn active" onclick="filtrarOrdenes('TODAS', this)">Todas</button>
+    <button class="btn filter-btn" onclick="filtrarOrdenes('CONFIRMADA', this)">Confirmadas</button>
+    <button class="btn filter-btn" onclick="filtrarOrdenes('ENVIADA', this)">Enviadas</button>
+    <button class="btn filter-btn" onclick="filtrarOrdenes('ENTREGADA', this)">Entregadas</button>
+</div>
             <table>
                 <thead>
                     <tr>
@@ -750,6 +755,10 @@ function copyPass(val) {
 // ==========================================================
 // 📦 FUNCIONES DE ÓRDENES DE PROVEEDORES
 // ==========================================================
+// 1. Variable global para guardar las órdenes (Ponla al inicio del script)
+let todasLasOrdenesProveedores = [];
+
+// 2. Función actualizada para cargar datos
 async function cargarOrdenesProveedores() {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -764,44 +773,63 @@ async function cargarOrdenesProveedores() {
         });
 
         const data = await response.json();
-        const tbody = document.getElementById('lista-ordenes-proveedores');
-        tbody.innerHTML = ''; 
-
-        if (data.status === 'success' && data.orders && data.orders.length > 0) {
-            data.orders.forEach(orden => {
-                const fecha = new Date(orden.created_at).toLocaleDateString();
-                
-                // Colores combinando con tu diseño actual
-                let colorEstado = "#636e72"; 
-                let bgEstado = "#f1f2f6";
-                if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
-                if (orden.status === "EN_CURSO" || orden.status === "ENVIADA") { colorEstado = "#e17055"; bgEstado = "#ffece7"; }
-                if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
-                if (orden.status === "CANCELADA") { colorEstado = "#d63031"; bgEstado = "#ffeded"; }
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="padding-left: 20px;"><strong>${orden.supplier_name}</strong></td>
-                        <td style="font-family:monospace; color:var(--text-gray);">${orden.order_number}</td>
-                        <td>
-                            <span style="background-color: ${bgEstado}; color: ${colorEstado}; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold;">
-                                ${orden.status}
-                            </span>
-                        </td>
-                        <td>${orden.tracking_number ? `<i class="fas fa-truck" style="color:var(--text-gray);"></i> ${orden.tracking_number}` : '<span style="color:#ccc; font-style:italic;">Pendiente</span>'}</td>
-                        <td style="font-weight:bold; color:var(--corporate-blue);">$${orden.total_amount ? parseFloat(orden.total_amount).toFixed(2) : '0.00'}</td>
-                        <td style="text-align:center; color:var(--text-gray); font-size:13px;">${fecha}</td>
-                    </tr>
-                `;
-            });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-gray);">No hay órdenes registradas aún.</td></tr>';
+        if (data.status === 'success' && data.orders) {
+            todasLasOrdenesProveedores = data.orders; // Guardamos copia
+            renderizarOrdenes(todasLasOrdenesProveedores); // Dibujamos todas
         }
     } catch (error) {
         console.error("Error al cargar órdenes:", error);
-        document.getElementById('lista-ordenes-proveedores').innerHTML = 
-            '<tr><td colspan="6" style="text-align: center; color: #d63031; padding: 40px;">Error al cargar las órdenes.</td></tr>';
     }
+}
+
+// 3. Función para filtrar
+function filtrarOrdenes(status, btnElement) {
+    // Cambiar color de botones
+    document.querySelectorAll('#proveedores .filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    if (status === 'TODAS') {
+        renderizarOrdenes(todasLasOrdenesProveedores);
+    } else {
+        const filtradas = todasLasOrdenesProveedores.filter(o => o.status === status);
+        renderizarOrdenes(filtradas);
+    }
+}
+
+// 4. Función para dibujar la tabla
+function renderizarOrdenes(lista) {
+    const tbody = document.getElementById('lista-ordenes-proveedores');
+    tbody.innerHTML = '';
+
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-gray);">No hay órdenes con este estado.</td></tr>';
+        return;
+    }
+
+    lista.forEach(orden => {
+        const fecha = new Date(orden.created_at).toLocaleDateString();
+        let colorEstado = "#636e72"; 
+        let bgEstado = "#f1f2f6";
+        
+        if (orden.status === "CONFIRMADA") { colorEstado = "#0984e3"; bgEstado = "#e7f3ff"; }
+        if (orden.status === "ENVIADA") { colorEstado = "#e17055"; bgEstado = "#ffece7"; }
+        if (orden.status === "ENTREGADA") { colorEstado = "#00b894"; bgEstado = "#e5fff9"; }
+
+        tbody.innerHTML += `
+            <tr>
+                <td style="padding-left: 20px;"><strong>${orden.supplier_name}</strong></td>
+                <td style="font-family:monospace; color:var(--text-gray);">${orden.order_number}</td>
+                <td>
+                    <span style="background-color: ${bgEstado}; color: ${colorEstado}; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold;">
+                        ${orden.status}
+                    </span>
+                </td>
+                <td>${orden.tracking_number ? `<i class="fas fa-truck" style="color:var(--text-gray);"></i> ${orden.tracking_number}` : '<span style="color:#ccc; font-style:italic;">Pendiente</span>'}</td>
+                <td style="font-weight:bold; color:var(--corporate-blue);">$${orden.total_amount ? parseFloat(orden.total_amount).toFixed(2) : '0.00'}</td>
+                <td style="text-align:center; color:var(--text-gray); font-size:13px;">${fecha}</td>
+            </tr>
+        `;
+    });
 }
 </script>
 
